@@ -1,0 +1,4 @@
+export enum HTTP_CODE {
+    ERR_NETWORK = "ERR_NETWORK",
+    ECONNABORTED = "ECONNABORTED",
+}

@@ -1,0 +1,21 @@
+import * as React from "react";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import { AccountDetails } from "@/components/dashboard/accounts/account-details";
+import { appConfig } from "@/config/app";
+ ; 
+
+export const metadata = { title: `Account | Settings | Dashboard | ${appConfig.name}` };
+
+export default function Page() {
+    return (
+        <Stack spacing={4}>
+            <div>
+                <Typography variant="h4">Account</Typography>
+            </div>
+            <Stack spacing={4}>
+                <AccountDetails /> 
+            </Stack>
+        </Stack>
+    );
+}
