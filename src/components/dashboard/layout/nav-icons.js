@@ -1,3 +1,4 @@
+import { Table } from "@mui/material";
 import { AddressBook as AddressBookIcon } from "@phosphor-icons/react/dist/ssr/AddressBook";
 import { AlignLeft as AlignLeftIcon } from "@phosphor-icons/react/dist/ssr/AlignLeft";
 import { CalendarCheck as CalendarCheckIcon } from "@phosphor-icons/react/dist/ssr/CalendarCheck";
@@ -28,6 +29,7 @@ import { Truck as TruckIcon } from "@phosphor-icons/react/dist/ssr/Truck";
 import { Upload as UploadIcon } from "@phosphor-icons/react/dist/ssr/Upload";
 import { Users as UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
 import { WarningDiamond as WarningDiamondIcon } from "@phosphor-icons/react/dist/ssr/WarningDiamond";
+import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
 
 export const icons = {
 	"address-book": AddressBookIcon,
@@ -48,6 +50,7 @@ export const icons = {
 	"sign-out": SignOutIcon,
 	"text-align-left": TextAlignLeftIcon,
 	"warning-diamond": WarningDiamondIcon,
+	"database": DatabaseIcon,
 	cube: CubeIcon,
 	file: FileIcon,
 	gear: GearIcon,

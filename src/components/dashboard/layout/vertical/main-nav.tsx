@@ -1,20 +1,13 @@
 "use client";
 
-import * as React from "react";
-import { TRAIL_SUB_ID } from "@/utils/config";
-import { Replay } from "@mui/icons-material";
-import { Button } from "@mui/material";
+import * as React from "react"; 
 import Avatar from "@mui/material/Avatar";
 import Badge from "@mui/material/Badge";
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Stack from "@mui/material/Stack";
-import Tooltip from "@mui/material/Tooltip";
-import { List as ListIcon } from "@phosphor-icons/react/dist/ssr/List";  
+import Box from "@mui/material/Box"; 
+import Stack from "@mui/material/Stack"; 
 import { usePopover } from "@/hooks/use-popover";
 import { useAuth } from "@/components/auth/auth-context";
-
-import BrandsPopover from "../brands-popover";   
+ 
 import { MobileNav } from "../mobile-nav"; 
 import { UserPopover } from "../user-popover";
 import { MainNavWrapper } from "./main-nav.style";
@@ -40,12 +33,10 @@ interface MainNavProps {
 	}[];
 }
 export function MainNav({ items = [] }: MainNavProps) {
-	const [openNav, setOpenNav] = React.useState(false);
-	const { currentSubscription } = useAuth();
-	const trialClass = currentSubscription?.subsId === TRAIL_SUB_ID ? "trial-plan" : "";
+	const [openNav, setOpenNav] = React.useState(false);  
 	return (
 		<MainNavWrapper
-			className={`header-main-wrapper ${trialClass}`}
+			className={`header-main-wrapper`}
 			sx={{
 				"--MainNav-background": "var(--mui-palette-background-default)",
 				"--MainNav-divider": "var(--mui-palette-divider)",
@@ -69,65 +60,13 @@ export function MainNav({ items = [] }: MainNavProps) {
 						py: 1,
 					}}
 					className="header-container"
-				>
-					<Stack
-						direction="row"
-						spacing={2}
-						sx={{ alignItems: "center", flex: "1 1 auto" }}
-						className="navicon-wrapper"
-					>
-						<IconButton
-							onClick={() => {
-								setOpenNav(true);
-							}}
-							sx={{ display: { lg: "none" } }}
-							className="hamburger-icon"
-						>
-							<ListIcon />
-						</IconButton>
-						<BrandsPopover isLabel={false} />
-					</Stack>
+				> 
 
 					<Stack
 						direction="row"
 						spacing={1.5}
 						sx={{ alignItems: "center", flex: "1 1 auto", justifyContent: "flex-end" }}
-					>
-						<Button sx={{ height: 38, width: 38 }} onClick={() => window.location.reload()} title="Refresh">
-							<Replay />{" "}
-						</Button>
-
-						{currentSubscription?.subsId === TRAIL_SUB_ID &&
-							currentSubscription?.activeDate &&
-							currentSubscription?.endDate && (
-								<Tooltip title="Your subscription plan">
-									<Box
-										sx={{
-											display: "flex",
-											alignItems: "center",
-											gap: 1,
-											backgroundColor: "primary.dark",
-											padding: "4px 12px",
-											borderRadius: 1,
-											color: "primary.contrastText",
-											fontSize: "0.875rem",
-										}}
-										className="trial-expiration"
-									>
-										{currentSubscription.name} -
-										<span>
-											{Math.max(
-												0,
-												Math.ceil(
-													(new Date(currentSubscription.endDate).getTime() - new Date().getTime()) /
-														(1000 * 60 * 60 * 24)
-												)
-											)}{" "}
-											days left
-										</span>
-									</Box>
-								</Tooltip>
-							)} 
+					> 
 						<UserButton />
 					</Stack>
 				</Box>

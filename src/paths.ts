@@ -7,16 +7,22 @@ export const paths = {
 	},
 	dashboard: {
 		overview: "/dashboard",
+		privAgentMd: '/dashboard/priv-agent-md',
 		projects: '/dashboard/projects',
+		database: '/dashboard/database',
+		users: '/dashboard/users',
+		chatAgents: '/dashboard/chat-agents',
+
+		// OLD ROUTES - REMOVE AFTER VERIFICATION
 		aiAgent: '/dashboard/prompts',
 		addInfo: '/dashboard/add-info',
 		addData: '/dashboard/info-data',
-		infoDataEditPreview: (id:string) => `/dashboard/info-data?editId=${id}`,
+		infoDataEditPreview: (id: string) => `/dashboard/info-data?editId=${id}`,
 		infoTextMetaDataPreview: (id: string) => `/dashboard/info-data?infoTextMetaDataID=${id}`,
 		infoFileMetaDataPreview: (id: string) => `/dashboard/info-data?infoFileMetaDataID=${id}`,
 		addWebPages: '/dashboard/add-web-pages',
 		chatbot: '/dashboard/chatbot-integration',
-		demoChatbot: '/dashboard/chatbot-demo', 
+		demoChatbot: '/dashboard/chatbot-demo',
 		widgets: {
 			badges: '/dashboard/widgets/badges',
 		},

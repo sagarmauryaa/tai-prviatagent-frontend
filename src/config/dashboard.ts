@@ -6,35 +6,46 @@ const dashboardConfig = {
 	navColor: "evident",
 	navItems: [
 		{
-			key: "dashboards",
-			title: "Dashboards",
+			key: "General",
+			title: "General",
 			items: [
-				{ key: "overview", title: "Overview", href: paths.dashboard.overview, icon: "house" },
+				{ key: "home", title: "Home", href: paths.dashboard.overview, icon: "house" },
 				{
-					key: "projects",
-					title: "Projects",
-					icon: "cube",
-					href: paths.dashboard.projects
+					key: "private",
+					title: "PrivAgent.md",
+					icon: "file",
+					href: paths.dashboard.privAgentMd
 				}
+			],
+		},
+		{
+			key: "agents",
+			title: "Agents",
+			items: [
+				, {
+					key: "chat-agents",
+					title: "Chat Agents",
+					icon: "chats-circle",
+					href: paths.dashboard.chatAgents
+				},
+			],
+		},
+		{
+			key: "data",
+			title: "Data (DeepIndex Technology)",
+			items: [
 				, {
 					key: "add-data",
 					title: "Add Data",
 					icon: "file",
 					href: paths.dashboard.addData
-				},
+				}, 
 				{
-					key: "widgets",
-					title: "Chatbot Integration",
-					icon: "file-dashed",
-					href: paths.dashboard.chatbot
-				},
-				{
-					key: "try-demo",
-					title: "Try it now",
-					icon: "cube",
-					href: paths.dashboard.demoChatbot
-				},
-				{ key: "setting", title: "Settings", href: paths.dashboard.setting, icon: "gear" },
+					key: "database",
+					title: "SQL Databases",
+					icon: "database",
+					href: paths.dashboard.database
+				}
 			],
 		},
 	],

@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import { appConfig } from "@/config/app"; 
 import { WelcomeMessage } from "@/components/dashboard/settings/welcome-message"; 
 import {CardHeader,Card,CardContent} from "@mui/material"; 
-import PromptForm from "@/components/dashboard/propmt-form";
+import PromptForm from "@/components/dashboard/priv-agent-form";
 import { ThemeSwitch } from "@/components/dashboard/settings/theme-switch";
 
 export const metadata = { title: `Chatbot Settings | Dashboard | ${appConfig.name}` };
