@@ -16,7 +16,7 @@ export default function Page() {
         width: "var(--Content-width)",
       }}
     >
-      <Box sx={{ p: 1 }}>
+      <Box  >
         <Typography variant="h5" sx={{ fontWeight: 600, color: '#1a365d', mb: 1 }}>
           PrivAgent.md
         </Typography>

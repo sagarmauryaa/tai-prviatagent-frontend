@@ -13,7 +13,7 @@ const dashboardConfig = {
 				{
 					key: "private",
 					title: "PrivAgent.md",
-					icon: "file",
+					icon: "file-md",
 					href: paths.dashboard.privAgentMd
 				}
 			],
@@ -45,6 +45,24 @@ const dashboardConfig = {
 					title: "SQL Databases",
 					icon: "database",
 					href: paths.dashboard.database
+				}
+			],
+		},
+		{
+			key: "other",
+			title: "Others",
+			items: [
+				, {
+					key: "projects",
+					title: "Projects",
+					icon: "folder",
+					href: paths.dashboard.projects
+				}, 
+				{
+					key: "users",
+					title: "Users",
+					icon: "users",
+					href: paths.dashboard.users
 				}
 			],
 		},

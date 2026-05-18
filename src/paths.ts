@@ -11,6 +11,7 @@ export const paths = {
 		projects: '/dashboard/projects',
 		database: '/dashboard/database',
 		users: '/dashboard/users',
+		userDetail: (id: string) => `/dashboard/users/${id}`,
 		chatAgents: '/dashboard/chat-agents',
 
 		// OLD ROUTES - REMOVE AFTER VERIFICATION

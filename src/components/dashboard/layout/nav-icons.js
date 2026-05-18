@@ -1,4 +1,3 @@
-import { Table } from "@mui/material";
 import { AddressBook as AddressBookIcon } from "@phosphor-icons/react/dist/ssr/AddressBook";
 import { AlignLeft as AlignLeftIcon } from "@phosphor-icons/react/dist/ssr/AlignLeft";
 import { CalendarCheck as CalendarCheckIcon } from "@phosphor-icons/react/dist/ssr/CalendarCheck";
@@ -30,7 +29,8 @@ import { Upload as UploadIcon } from "@phosphor-icons/react/dist/ssr/Upload";
 import { Users as UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
 import { WarningDiamond as WarningDiamondIcon } from "@phosphor-icons/react/dist/ssr/WarningDiamond";
 import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
-
+import { Folders as FoldersIcon } from '@phosphor-icons/react/dist/ssr/Folders';
+import { FileMd as FileMdIcon } from '@phosphor-icons/react/dist/ssr/FileMd'; 
 export const icons = {
 	"address-book": AddressBookIcon,
 	"align-left": AlignLeftIcon,
@@ -52,7 +52,9 @@ export const icons = {
 	"warning-diamond": WarningDiamondIcon,
 	"database": DatabaseIcon,
 	cube: CubeIcon,
-	file: FileIcon,
+	"folder": FoldersIcon, 
+	"file-md": FileMdIcon,
+	"file": FileIcon,
 	gear: GearIcon,
 	house: HouseIcon,
 	kanban: KanbanIcon,

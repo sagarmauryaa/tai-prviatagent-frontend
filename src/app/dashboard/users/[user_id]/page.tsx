@@ -1,9 +1,14 @@
 import Box from "@mui/material/Box";
 import { appConfig } from "@/config/app";
-import ProjectsPageData from "@/components/dashboard/projects/page-data";
+import UserDetail from "@/components/dashboard/users/UserDetail";
 
-export const metadata = { title: `Projects | Dashboard | ${appConfig.name}` };
-const ProjectsPage = () => {
+export const metadata = { title: `User Details | Dashboard | ${appConfig.name}` };
+
+interface Props {
+  params: { user_id: string };
+}
+
+const UserDetailPage = ({ params }: Props) => {
   return (
     <Box
       sx={{
@@ -13,9 +18,9 @@ const ProjectsPage = () => {
         width: "var(--Content-width)",
       }}
     >
-      <ProjectsPageData />
+      <UserDetail userId={params.user_id} />
     </Box>
-  )
-}
+  );
+};
 
-export default ProjectsPage
+export default UserDetailPage;
