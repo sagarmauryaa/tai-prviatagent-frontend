@@ -8,8 +8,11 @@ import {
     Button,
     Checkbox,
     Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
     Divider,
-    FormControlLabel,
     MenuItem,
     Select,
     Stack,
@@ -53,7 +56,13 @@ const MOCK_PROJECTS = [
     "Marketing Assets",
 ];
 
-const AI_MODELS = ["gpt-5.2", "gpt-4o", "gpt-4-turbo", "claude-3-5-sonnet", "gemini-1.5-pro"];
+const AI_MODELS = [
+    "gpt-5.2",
+    "gpt-4o",
+    "gpt-4-turbo",
+    "claude-3-5-sonnet",
+    "gemini-1.5-pro",
+];
 
 const FEATURE_FLAGS = [
     { key: "canSelectAIModel", label: "Can select AI model", tooltip: null },
@@ -61,7 +70,7 @@ const FEATURE_FLAGS = [
     {
         key: "canUploadEditDeleteFiles",
         label: "Can upload/edit/delete files",
-        tooltip: "Grants the user permission to upload, edit, and delete files within assigned projects.",
+        tooltip: "Grants permission to upload, edit, and delete files within assigned projects.",
     },
     {
         key: "canManageSQLDatabases",
@@ -89,72 +98,29 @@ interface FeatureFlagState {
     canConfigureChatAgent: boolean;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function getInitials(name: string) {
-    return name.slice(0, 2).toUpperCase();
-}
-
-function StatPill({
-    icon,
-    label,
-    value,
-}: {
-    icon: React.ReactNode;
-    label: string;
-    value: string;
-}) {
+// ─── Sub-components ───────────────────────────────────────────────────────────
+function StatPill({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === "dark";
     return (
-        <Box
+        <Stack
+            direction="row"
+            spacing={1.5}
+            alignItems="center"
             sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
+                flex: 1,
+                minWidth: 0,
                 px: 2,
                 py: 1.5,
                 borderRadius: 2,
                 border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : theme.palette.divider}`,
-                background: isDark ? "rgba(255,255,255,0.03)" : theme.palette.background.default,
-                flex: 1,
-                minWidth: 0,
+                background: isDark ? "rgba(255,255,255,0.02)" : theme.palette.background.default,
             }}
         >
             <Box
                 sx={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 1.5,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: alpha(theme.palette.primary.main, 0.12),
-                    color: "primary.main",
-                    flexShrink: 0,
-                }}
-            >
-                {icon}
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-                <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "0.68rem" }}>
-                    {label}
-                </Typography>
-                <Typography variant="body2" fontWeight={600} noWrap>
-                    {value}
-                </Typography>
-            </Box>
-        </Box>
-    );
-}
-
-function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
-    const theme = useTheme();
-    return (
-        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2.5 }}>
-            <Box
-                sx={{
-                    width: 30,
-                    height: 30,
+                    width: 32,
+                    height: 32,
                     borderRadius: 1.5,
                     display: "flex",
                     alignItems: "center",
@@ -166,7 +132,27 @@ function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }
             >
                 {icon}
             </Box>
-            <Typography variant="subtitle1" fontWeight={700}>
+            <Box sx={{ minWidth: 0 }}>
+                <Typography
+                    variant="caption"
+                    color="text.disabled"
+                    sx={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "0.66rem", display: "block" }}
+                >
+                    {label}
+                </Typography>
+                <Typography variant="body2" fontWeight={600} noWrap>
+                    {value}
+                </Typography>
+            </Box>
+        </Stack>
+    );
+}
+
+function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
+    return (
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+            <Box sx={{ color: "text.secondary", display: "flex" }}>{icon}</Box>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: "0.06em", fontSize: "0.72rem", color: "text.secondary" }}>
                 {title}
             </Typography>
         </Stack>
@@ -180,8 +166,8 @@ function Card({ children, sx }: { children: React.ReactNode; sx?: object }) {
         <Box
             sx={{
                 p: { xs: 2.5, sm: 3 },
-                borderRadius: 3,
-                border: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : theme.palette.divider}`,
+                borderRadius: 2,
+                border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : theme.palette.divider}`,
                 background: isDark ? theme.palette.background.paper : "#fff",
                 ...sx,
             }}
@@ -191,7 +177,7 @@ function Card({ children, sx }: { children: React.ReactNode; sx?: object }) {
     );
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function UserDetail({ userId }: { userId: string }) {
     const theme = useTheme();
     const isDark = theme.palette.mode === "dark";
@@ -213,19 +199,10 @@ export default function UserDetail({ userId }: { userId: string }) {
     const [customFirstMessage, setCustomFirstMessage] = React.useState(
         `Hello Saurabh, Welcome. I am CLEO your data assistant for Exalto Emirates. I am still new and learning.\n\n🌐 What data is available\nThis assistant has access to Exalto data aggregated in Fabric from SERA ERP and HubSpot CRM.`
     );
-    const [confirmDelete, setConfirmDelete] = React.useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
 
     const handleFlagChange = (key: keyof FeatureFlagState) => (e: React.ChangeEvent<HTMLInputElement>) => {
         setFeatureFlags((prev) => ({ ...prev, [key]: e.target.checked }));
-    };
-
-    const handleSave = () => {
-        toast.success("User settings saved successfully");
-    };
-
-    const handleDelete = () => {
-        if (!confirmDelete) { toast.error("Please confirm deletion first"); return; }
-        toast.success("User deleted (stub)");
     };
 
     const formattedDate = new Date(MOCK_USER.createdAt).toLocaleDateString("en-GB", {
@@ -234,134 +211,122 @@ export default function UserDetail({ userId }: { userId: string }) {
 
     return (
         <Stack spacing={3}>
-            {/* ── Back ── */}
+
+            {/* ── Back Button ── */}
             <Box>
                 <Button
                     component={RouterLink}
                     href={paths.dashboard.users}
                     startIcon={<ArrowLeftIcon size={16} />}
-                    sx={{ color: "text.secondary", mb: 1.5, pl: 0, "&:hover": { background: "transparent", color: "text.primary" } }}
+                    sx={{ color: "text.secondary", pl: 0, mb: 1.5, "&:hover": { background: "transparent", color: "text.primary" } }}
                 >
                     Back to Users
                 </Button>
 
-                {/* ── Hero Header ── */}
-                <Card sx={{ p: { xs: 2.5, sm: 3 } }}>
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems={{ xs: "flex-start", sm: "center" }} justifyContent="space-between">
-                        <Stack direction="row" spacing={2.5} alignItems="center">
+                {/* ── Profile Header Card ── */}
+                <Card>
+                    <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={3}
+                        alignItems={{ xs: "flex-start", sm: "center" }}
+                        justifyContent="space-between"
+                    >
+                        {/* Avatar + Name */}
+                        <Stack direction="row" spacing={2} alignItems="center">
                             <Avatar
                                 sx={{
-                                    width: 64,
-                                    height: 64,
-                                    fontSize: "1.4rem",
+                                    width: 56,
+                                    height: 56,
+                                    fontSize: "1.2rem",
                                     fontWeight: 700,
-                                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${alpha(theme.palette.primary.main, 0.6)})`,
-                                    color: theme.palette.primary.contrastText,
-                                    boxShadow: `0 4px 14px ${alpha(theme.palette.primary.main, 0.35)}`,
+                                    bgcolor: "primary.main",
+                                    color: "primary.contrastText",
                                 }}
                             >
-                                {getInitials(MOCK_USER.username)}
+                                {MOCK_USER.username.slice(0, 2).toUpperCase()}
                             </Avatar>
                             <Box>
-                                <Stack direction="row" spacing={1} alignItems="center">
-                                    <Typography variant="h5" fontWeight={700}>
+                                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                                    <Typography variant="h6" fontWeight={700}>
                                         {MOCK_USER.username}
                                     </Typography>
-                                    {MOCK_USER.isAdmin && (
-                                        <Chip label="Admin" size="small" color="primary" sx={{ fontWeight: 700, height: 22, fontSize: "0.7rem" }} />
-                                    )}
                                     <Chip
-                                        label="Active"
+                                        label={MOCK_USER.isAdmin ? "Admin" : "USER"}
                                         size="small"
-                                        sx={{
-                                            height: 22,
-                                            fontSize: "0.7rem",
-                                            fontWeight: 600,
-                                            bgcolor: alpha(theme.palette.success.main, 0.12),
-                                            color: "success.main",
-                                        }}
+                                        color={MOCK_USER.isAdmin ? "primary" : "default"}
+                                        sx={{ height: 20, fontSize: "0.68rem", fontWeight: 700 }}
                                     />
                                 </Stack>
-                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                                <Typography variant="caption" color="text.disabled" sx={{ mt: 0.25, display: "block" }}>
                                     ID: {MOCK_USER.id}
                                 </Typography>
                             </Box>
                         </Stack>
 
-                        {/* Delete action */}
-                        <Stack spacing={1} alignItems={{ xs: "flex-start", sm: "flex-end" }}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        size="small"
-                                        checked={confirmDelete}
-                                        onChange={(e) => setConfirmDelete(e.target.checked)}
-                                        sx={{ color: "error.main", "&.Mui-checked": { color: "error.main" }, p: 0.5 }}
-                                    />
-                                }
-                                label={<Typography variant="caption" color="text.secondary">Confirm deletion</Typography>}
-                                sx={{ mx: 0 }}
-                            />
+                        {/* Delete Controls */}
+                        <Box>
                             <Button
                                 variant="outlined"
                                 color="error"
                                 size="small"
-                                disabled={!confirmDelete}
                                 startIcon={<TrashIcon size={15} />}
-                                onClick={handleDelete}
-                                sx={{ borderRadius: 1.5, fontSize: "0.8rem" }}
+                                onClick={() => setDeleteDialogOpen(true)}
                             >
                                 Delete User
                             </Button>
-                        </Stack>
+                        </Box>
                     </Stack>
 
-                    {/* Stat pills */}
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ mt: 3 }}>
-                        <StatPill icon={<UserIcon size={18} weight="duotone" />} label="Username" value={MOCK_USER.username} />
-                        <StatPill icon={<ShieldIcon size={18} weight="duotone" />} label="Role" value={MOCK_USER.isAdmin ? "Admin" : "Member"} />
-                        <StatPill icon={<FolderIcon size={18} weight="duotone" />} label="Projects" value={`${MOCK_USER.projects.length} assigned`} />
-                        <StatPill icon={<CalendarIcon size={18} weight="duotone" />} label="Created" value={formattedDate} />
+                    {/* Stat Pills Row */}
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ mt: 2.5 }}>
+                        <StatPill icon={<FolderIcon size={16} weight="duotone" />} label="Projects" value={`${MOCK_USER.projects.length} assigned`} />
+                        <StatPill icon={<CalendarIcon size={16} weight="duotone" />} label="Created" value={formattedDate} />
                     </Stack>
                 </Card>
             </Box>
 
-            {/* ── Two-col layout ── */}
+            {/* ── Two-Column Body ── */}
             <Stack direction={{ xs: "column", lg: "row" }} spacing={3} alignItems="flex-start">
-                {/* LEFT column */}
+
+                {/* LEFT — Settings + Flags */}
                 <Stack spacing={3} sx={{ flex: 1, minWidth: 0, width: "100%" }}>
 
                     {/* Change Settings */}
                     <Card>
-                        <SectionHeader icon={<ShieldIcon size={16} weight="duotone" />} title="Change Settings" />
+                        <SectionTitle icon={<ShieldIcon size={15} />} title="Change Settings" />
                         <Stack spacing={2.5}>
-                            <Box
+
+                            {/* Admin row */}
+                            <Stack
+                                direction="row"
+                                alignItems="center"
+                                justifyContent="space-between"
                                 sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    p: 2,
-                                    borderRadius: 2,
+                                    px: 2,
+                                    py: 1.5,
+                                    borderRadius: 1.5,
                                     border: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : theme.palette.divider}`,
-                                    background: isAdmin
-                                        ? alpha(theme.palette.primary.main, 0.06)
-                                        : isDark ? "rgba(255,255,255,0.02)" : theme.palette.background.default,
-                                    transition: "all 0.2s",
+                                    background: isDark ? "rgba(255,255,255,0.02)" : theme.palette.background.default,
                                 }}
                             >
                                 <Box>
                                     <Typography variant="body2" fontWeight={600}>Administrator</Typography>
-                                    <Typography variant="caption" color="text.secondary">Full access to all settings and projects</Typography>
+                                    <Typography variant="caption" color="text.secondary">Full access to all projects and settings</Typography>
                                 </Box>
                                 <Checkbox
+                                    size="small"
                                     checked={isAdmin}
                                     onChange={(e) => setIsAdmin(e.target.checked)}
-                                    sx={{ color: "text.disabled" }}
                                 />
-                            </Box>
+                            </Stack>
 
+                            {/* Assigned Projects */}
                             <Box>
-                                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", fontSize: "0.68rem", display: "block", mb: 1 }}>
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", fontSize: "0.68rem", display: "block", mb: 1 }}
+                                >
                                     Assigned Projects
                                 </Typography>
                                 <Autocomplete
@@ -394,7 +359,11 @@ export default function UserDetail({ userId }: { userId: string }) {
                                         })
                                     }
                                     renderInput={(params) => (
-                                        <TextField {...params} size="small" placeholder={assignedProjects.length === 0 ? "Select projects…" : ""} />
+                                        <TextField
+                                            {...params}
+                                            size="small"
+                                            placeholder={assignedProjects.length === 0 ? "Select projects…" : ""}
+                                        />
                                     )}
                                 />
                             </Box>
@@ -403,82 +372,81 @@ export default function UserDetail({ userId }: { userId: string }) {
 
                     {/* Feature Flags */}
                     <Card>
-                        <SectionHeader icon={<FlagIcon size={16} weight="duotone" />} title="Feature Flags" />
-                        <Stack spacing={1}>
-                            {FEATURE_FLAGS.map((flag, i) => (
-                                <React.Fragment key={flag.key}>
-                                    <Box
-                                        sx={{
-                                            p: 1.5,
-                                            borderRadius: 2,
-                                            border: `1px solid ${featureFlags[flag.key as keyof FeatureFlagState]
-                                                ? alpha(theme.palette.primary.main, 0.25)
-                                                : isDark ? "rgba(255,255,255,0.05)" : theme.palette.divider}`,
-                                            background: featureFlags[flag.key as keyof FeatureFlagState]
-                                                ? alpha(theme.palette.primary.main, 0.05)
-                                                : "transparent",
-                                            transition: "all 0.2s",
-                                        }}
+                        <SectionTitle icon={<FlagIcon size={15} />} title="Feature Flags" />
+                        <Stack divider={<Divider />}>
+                            {FEATURE_FLAGS.map((flag) => (
+                                <Box key={flag.key}>
+                                    <Stack
+                                        direction="row"
+                                        alignItems="center"
+                                        justifyContent="space-between"
+                                        sx={{ py: 1.25 }}
                                     >
-                                        <Stack direction="row" alignItems="center" justifyContent="space-between">
-                                            <Stack direction="row" alignItems="center" spacing={1}>
-                                                <Typography variant="body2" component="label" htmlFor={`flag-${flag.key}`} sx={{ cursor: "pointer", fontWeight: 500 }}>
-                                                    {flag.label}
-                                                </Typography>
-                                                {flag.tooltip && (
-                                                    <Tooltip title={flag.tooltip} placement="right" arrow>
-                                                        <Box sx={{ display: "flex", color: "text.disabled", cursor: "help", "&:hover": { color: "text.secondary" } }}>
-                                                            <QuestionIcon size={14} />
-                                                        </Box>
-                                                    </Tooltip>
-                                                )}
-                                            </Stack>
-                                            <Checkbox
-                                                id={`flag-${flag.key}`}
-                                                size="small"
-                                                checked={featureFlags[flag.key as keyof FeatureFlagState]}
-                                                onChange={handleFlagChange(flag.key as keyof FeatureFlagState)}
-                                                sx={{ p: 0.5 }}
-                                            />
+                                        <Stack direction="row" alignItems="center" spacing={0.75}>
+                                            <Typography
+                                                variant="body2"
+                                                component="label"
+                                                htmlFor={`flag-${flag.key}`}
+                                                sx={{ cursor: "pointer" }}
+                                            >
+                                                {flag.label}
+                                            </Typography>
+                                            {flag.tooltip && (
+                                                <Tooltip title={flag.tooltip} placement="right" arrow>
+                                                    <Box sx={{ display: "flex", color: "text.disabled", cursor: "help", "&:hover": { color: "text.secondary" } }}>
+                                                        <QuestionIcon size={14} />
+                                                    </Box>
+                                                </Tooltip>
+                                            )}
                                         </Stack>
+                                        <Checkbox
+                                            id={`flag-${flag.key}`}
+                                            size="small"
+                                            checked={featureFlags[flag.key as keyof FeatureFlagState]}
+                                            onChange={handleFlagChange(flag.key as keyof FeatureFlagState)}
+                                            sx={{ p: 0.5 }}
+                                        />
+                                    </Stack>
 
-                                        {/* AI Model sub-control */}
-                                        {flag.key === "canSelectAIModel" && (
-                                            <Box sx={{ mt: 1.5, pt: 1.5, borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : theme.palette.divider}` }}>
-                                                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.75 }}>
-                                                    AI Model for this user
-                                                </Typography>
-                                                <Select
-                                                    size="small"
-                                                    value={aiModel}
-                                                    onChange={(e) => setAiModel(e.target.value)}
-                                                    fullWidth
-                                                    disabled={!featureFlags.canSelectAIModel}
-                                                    startAdornment={<RobotIcon size={16} style={{ marginRight: 8, opacity: 0.6 }} />}
-                                                >
-                                                    {AI_MODELS.map((m) => (
-                                                        <MenuItem key={m} value={m}>{m}</MenuItem>
-                                                    ))}
-                                                </Select>
-                                            </Box>
-                                        )}
-                                    </Box>
-                                    {i < FEATURE_FLAGS.length - 1 && <Box />}
-                                </React.Fragment>
+                                    {/* AI Model dropdown under first flag */}
+                                    {flag.key === "canSelectAIModel" && (
+                                        <Box sx={{ pb: 1.5 }}>
+                                            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.75 }}>
+                                                AI Model for this user
+                                            </Typography>
+                                            <Select
+                                                size="small"
+                                                value={aiModel}
+                                                onChange={(e) => setAiModel(e.target.value)}
+                                                fullWidth
+                                                disabled={!featureFlags.canSelectAIModel}
+                                                startAdornment={
+                                                    <Box sx={{ display: "flex", color: "text.disabled", mr: 1 }}>
+                                                        <RobotIcon size={16} />
+                                                    </Box>
+                                                }
+                                            >
+                                                {AI_MODELS.map((m) => (
+                                                    <MenuItem key={m} value={m}>{m}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        </Box>
+                                    )}
+                                </Box>
                             ))}
                         </Stack>
                     </Card>
                 </Stack>
 
-                {/* RIGHT column */}
+                {/* RIGHT — PrivAgent.md + Chat Message */}
                 <Stack spacing={3} sx={{ flex: 1, minWidth: 0, width: "100%" }}>
 
                     {/* PrivAgent.md */}
                     <Card>
-                        <SectionHeader icon={<ArticleIcon size={16} weight="duotone" />} title="User's PrivAgent.md" />
+                        <SectionTitle icon={<ArticleIcon size={15} />} title="User's PrivAgent.md" />
                         <TextField
                             multiline
-                            minRows={8}
+                            minRows={9}
                             maxRows={18}
                             fullWidth
                             value={privAgentMd}
@@ -486,26 +454,26 @@ export default function UserDetail({ userId }: { userId: string }) {
                             placeholder="Enter markdown content for this user's PrivAgent…"
                             sx={{
                                 "& .MuiOutlinedInput-root": {
-                                    fontFamily: "'JetBrains Mono', 'Fira Code', 'Roboto Mono', monospace",
+                                    fontFamily: "'Fira Code', 'JetBrains Mono', 'Roboto Mono', monospace",
                                     fontSize: "0.8rem",
-                                    lineHeight: 1.7,
-                                    background: isDark ? "rgba(0,0,0,0.2)" : alpha(theme.palette.neutral?.[50] ?? "#f9f9f9", 1),
-                                    borderRadius: 2,
+                                    lineHeight: 1.75,
+                                    background: isDark ? "rgba(0,0,0,0.15)" : "var(--mui-palette-neutral-50)",
+                                    borderRadius: 1.5,
                                 },
                             }}
                         />
                     </Card>
 
-                    {/* Custom first chat message */}
+                    {/* Custom Chat Message */}
                     <Card>
-                        <SectionHeader icon={<ChatIcon size={16} weight="duotone" />} title="Custom first chat message" />
+                        <SectionTitle icon={<ChatIcon size={15} />} title="Custom first chat message" />
                         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
                             Shown as the assistant&apos;s greeting when this user opens a new chat. Leave blank to use the default.
                         </Typography>
                         <TextField
                             multiline
                             minRows={5}
-                            maxRows={10}
+                            maxRows={12}
                             fullWidth
                             value={customFirstMessage}
                             onChange={(e) => setCustomFirstMessage(e.target.value)}
@@ -514,8 +482,8 @@ export default function UserDetail({ userId }: { userId: string }) {
                                 "& .MuiOutlinedInput-root": {
                                     fontSize: "0.875rem",
                                     lineHeight: 1.65,
-                                    background: isDark ? "rgba(0,0,0,0.2)" : alpha(theme.palette.neutral?.[50] ?? "#f9f9f9", 1),
-                                    borderRadius: 2,
+                                    background: isDark ? "rgba(0,0,0,0.15)" : "var(--mui-palette-neutral-50)",
+                                    borderRadius: 1.5,
                                 },
                             }}
                         />
@@ -523,43 +491,85 @@ export default function UserDetail({ userId }: { userId: string }) {
                 </Stack>
             </Stack>
 
-            {/* ── Footer Save ── */}
-            <Box
-                sx={{
-                    position: "sticky",
-                    bottom: 0,
-                    zIndex: 10,
-                    pt: 2,
-                    pb: 3,
-                    mt: 1,
-                    background: isDark
-                        ? `linear-gradient(to top, ${theme.palette.background.default} 70%, transparent)`
-                        : `linear-gradient(to top, #fff 70%, transparent)`,
-                }}
+            {/* ── Save Footer ── */}
+            <Divider />
+            <Stack direction="row" justifyContent="flex-end" sx={{ pb: 2 }}>
+                <Button
+                    variant="contained"
+                    size="medium"
+                    startIcon={<SaveIcon size={17} />}
+                    onClick={() => toast.success("User settings saved successfully")}
+                    sx={{ borderRadius: 1.5, px: 3 }}
+                >
+                    Save Changes
+                </Button>
+            </Stack>
+
+            {/* ── Delete Confirmation Dialog ── */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                maxWidth="xs"
+                fullWidth
             >
-                <Divider sx={{ mb: 2.5 }} />
-                <Stack direction="row" spacing={2} alignItems="center" justifyContent="flex-end">
-                    <Typography variant="caption" color="text.disabled">
-                        Changes are saved immediately after clicking Save
+                <DialogTitle sx={{ pb: 1 }}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Box
+                            sx={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 1.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                bgcolor: alpha(theme.palette.error.main, 0.1),
+                                color: "error.main",
+                                flexShrink: 0,
+                            }}
+                        >
+                            <TrashIcon size={18} />
+                        </Box>
+                        <Typography variant="h6" fontWeight={700}>
+                            Delete User
+                        </Typography>
+                    </Stack>
+                </DialogTitle>
+
+                <DialogContent sx={{ pt: "12px !important" }}>
+                    <Typography variant="body2" color="text.secondary">
+                        Are you sure you want to delete{" "}
+                        <Typography component="span" variant="body2" fontWeight={700} color="text.primary">
+                            {MOCK_USER.username}
+                        </Typography>
+                        ? This action cannot be undone. The user will lose access to all assigned projects immediately.
                     </Typography>
+                </DialogContent>
+
+                <DialogActions sx={{ px: 3, pb: 3, pt: 1, gap: 1 }}>
+                    <Button
+                        onClick={() => setDeleteDialogOpen(false)}
+                        color="inherit"
+                        size="small"
+                        sx={{ borderRadius: 1.5 }}
+                    >
+                        Cancel
+                    </Button>
                     <Button
                         variant="contained"
-                        size="medium"
-                        startIcon={<SaveIcon size={17} />}
-                        onClick={handleSave}
-                        sx={{
-                            borderRadius: 2,
-                            px: 3,
-                            boxShadow: `0 4px 14px ${alpha(theme.palette.primary.main, 0.35)}`,
-                            "&:hover": {
-                                boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.45)}`,
-                            },
+                        color="error"
+                        size="small"
+                        startIcon={<TrashIcon size={15} />}
+                        onClick={() => {
+                            // TODO: wire to real delete API
+                            toast.success(`User "${MOCK_USER.username}" deleted`);
+                            setDeleteDialogOpen(false);
                         }}
+                        sx={{ borderRadius: 1.5 }}
                     >
-                        Save Changes
+                        Yes, Delete User
                     </Button>
-                </Stack>
-            </Box>
+                </DialogActions>
+            </Dialog>
         </Stack>
     );
 }

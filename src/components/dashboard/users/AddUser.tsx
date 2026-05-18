@@ -3,18 +3,20 @@ import {
     Autocomplete,
     Box,
     Button,
+    Checkbox,
     Chip,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
-    FormControlLabel,
+    Divider,
     IconButton,
     InputAdornment,
     Stack,
-    Switch,
     TextField,
     Typography,
+    alpha,
+    useTheme,
 } from '@mui/material';
 import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
 import { Eye as EyeIcon } from '@phosphor-icons/react/dist/ssr/Eye';
@@ -49,6 +51,8 @@ const DEFAULT_FORM: FormState = {
 };
 
 const AddUser = () => {
+    const theme = useTheme();
+    const isDark = theme.palette.mode === 'dark';
     const [open, setOpen] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [isPending, setIsPending] = useState(false);
@@ -119,60 +123,48 @@ const AddUser = () => {
                     <Stack spacing={3}>
                         {/* Username + Password + Admin row */}
                         {/* <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start"> */}
-                            <Box sx={{ flex: 1 }}>
-                                <TextField
-                                    label="Username"
-                                    placeholder="e.g. john_doe"
-                                    value={form.username}
-                                    onChange={(e) => handleChange('username')(e.target.value.toLowerCase())}
-                                    disabled={isPending}
-                                    autoFocus
-                                    fullWidth
-                                    size="small"
-                                />
-                            </Box>
-
-                            <Box sx={{ flex: 1 }}>
-                                <TextField
-                                    label="Password"
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={form.password}
-                                    onChange={(e) => handleChange('password')(e.target.value)}
-                                    disabled={isPending}
-                                    fullWidth
-                                    size="small"
-                                    InputProps={{
-                                        endAdornment: (
-                                            <InputAdornment position="end">
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => setShowPassword((s) => !s)}
-                                                    edge="end"
-                                                >
-                                                    {showPassword
-                                                        ? <EyeSlashIcon size={18} />
-                                                        : <EyeIcon size={18} />}
-                                                </IconButton>
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
-                            </Box>
-
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={form.isAdmin}
-                                        onChange={(e) => handleChange('isAdmin')(e.target.checked)}
-                                        disabled={isPending}
-                                    />
-                                }
-                                label={
-                                    <Typography variant="body2" fontWeight={500}>Is Admin</Typography>
-                                }
-                                sx={{ mx: 0, mt: 0, whiteSpace: 'nowrap', gap:2 }}
+                        <Box sx={{ flex: 1 }}>
+                            <TextField
+                                label="Username"
+                                placeholder="e.g. john_doe"
+                                value={form.username}
+                                onChange={(e) => handleChange('username')(e.target.value.toLowerCase())}
+                                disabled={isPending}
+                                autoFocus
+                                fullWidth
+                                size="small"
                             />
+                        </Box>
+
+                        <Box sx={{ flex: 1 }}>
+                            <TextField
+                                label="Password"
+                                type={showPassword ? 'text' : 'password'}
+                                value={form.password}
+                                onChange={(e) => handleChange('password')(e.target.value)}
+                                disabled={isPending}
+                                fullWidth
+                                size="small"
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => setShowPassword((s) => !s)}
+                                                edge="end"
+                                            >
+                                                {showPassword
+                                                    ? <EyeSlashIcon size={18} />
+                                                    : <EyeIcon size={18} />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+                        </Box>
+
                         {/* </Stack> */}
+
 
                         {/* Assign to Projects */}
                         <Box>
@@ -180,12 +172,9 @@ const AddUser = () => {
                                 variant="caption"
                                 sx={{
                                     display: 'block',
-                                    fontWeight: 600,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.06em',
-                                    color: 'text.secondary',
+                                    fontWeight: 500,
                                     mb: 1,
-                                    fontSize: '0.72rem',
+                                    fontSize: '.9rem',
                                 }}
                             >
                                 Assign to Projects
@@ -207,7 +196,17 @@ const AddUser = () => {
                                                 label={option.name}
                                                 size="small"
                                                 {...tagProps}
-                                                sx={{ maxWidth: 160 }}
+                                                sx={{
+                                                    bgcolor: "primary.main",
+                                                    color: "primary.contrastText",
+                                                    fontWeight: 600,
+                                                    fontSize: "0.72rem",
+                                                    "& .MuiChip-deleteIcon": {
+                                                        color: "primary.contrastText",
+                                                        opacity: 0.7,
+                                                        "&:hover": { opacity: 1 },
+                                                    },
+                                                }}
                                             />
                                         );
                                     })
@@ -221,6 +220,36 @@ const AddUser = () => {
                                 )}
                             />
                         </Box>
+                        {/* Admin row */}
+                        <Divider />
+                        <Stack
+                            direction="row"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            sx={{
+                                px: 2,
+                                py: 1.5,
+                                borderRadius: 1.5,
+                                border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : theme.palette.divider}`,
+                                background: form.isAdmin
+                                    ? alpha(theme.palette.primary.main, 0.05)
+                                    : isDark ? 'rgba(255,255,255,0.02)' : theme.palette.background.default,
+                                transition: 'background 0.2s',
+                            }}
+                        >
+                            <Box>
+                                <Typography variant="body2" fontWeight={600}>Administrator</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Full access to all projects and settings
+                                </Typography>
+                            </Box>
+                            <Checkbox
+                                size="small"
+                                checked={form.isAdmin}
+                                onChange={(e) => handleChange('isAdmin')(e.target.checked)}
+                                disabled={isPending}
+                            />
+                        </Stack>
                     </Stack>
                 </DialogContent>
 
