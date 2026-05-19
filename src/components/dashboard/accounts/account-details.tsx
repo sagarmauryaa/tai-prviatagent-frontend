@@ -11,37 +11,26 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import Stack from "@mui/material/Stack";
-import { User as UserIcon } from "@phosphor-icons/react/dist/ssr/User";
 import { useAuth } from "@/components/auth/auth-context";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z as zod } from "zod";
 import { Controller, useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
-import Cookies from 'js-cookie';
-import { updateProfile } from "@/utils/backend-endpoints";
+import { updateMyProfile } from "@/utils/backend-endpoints";
 import { toast } from "sonner";
-import { Alert, CircularProgress, FormHelperText } from "@mui/material";
+import { Alert, CircularProgress, FormHelperText, Typography } from "@mui/material";
 
 const schema = zod.object({
-    userId: zod.string().min(1, { message: "User ID is required" }),
-    phone: zod.string().min(10, { message: "Phone number is required" }).regex(/^\+?[1-9]\d{1,10}$/, { message: "Invalid phone number format" }),
-    firstName: zod.string().min(1, { message: "First name is required" }),
-    lastName: zod.string().min(1, { message: "Last name is required" }),
+    fullName: zod.string().min(1, { message: "Full name is required" }),
 });
 
 type FormValues = zod.infer<typeof schema>;
 
 export function AccountDetails() {
-    const auth = useAuth();
-    const router = useRouter();
-    const { user } = auth;
+    const { user, updateUser } = useAuth();
     const [isPending, setIsPending] = React.useState(false);
 
     const defaultValues: FormValues = {
-        userId: user?.userId ?? '',
-        firstName: user?.firstName ?? '',
-        lastName: user?.lastName ?? '',
-        phone: user?.phone ?? ''
+        fullName: user?.fullName ?? '',
     };
 
     const {
@@ -55,112 +44,82 @@ export function AccountDetails() {
         resolver: zodResolver(schema)
     });
 
+    // Sync form when user context loads
+    React.useEffect(() => {
+        reset({ fullName: user?.fullName ?? '' });
+    }, [user, reset]);
+
     const handleCancel = () => {
         reset(defaultValues);
     };
 
-    const onSubmit = React.useCallback(async (data: FormValues) => { 
-
-        if (!data.userId || !data.firstName || !data.lastName) {
-            toast.error('Please fill in all required fields');
-            return;
-        }
-
+    const onSubmit = React.useCallback(async (data: FormValues) => {
         try {
             setIsPending(true);
-            const { data: response, status } = await updateProfile(data);
+            const { status } = await updateMyProfile(data);
 
             if (status === 200) {
-                const { userId, lastName, firstName, email, phone, token } = response.data;
-                console.log({ userId, lastName, firstName, email, phone });
-                
-                auth.setUser({ userId, lastName, firstName, email, phone });
-                Cookies.set('access_token', token);
+                updateUser({ fullName: data.fullName });
                 toast.success('Profile updated successfully');
-                router.refresh();
+                reset(data);
             } else {
                 throw new Error('Update failed');
             }
         } catch (error) {
             console.error(error);
-            toast.error(error instanceof Error ? error.message : 'Failed to update profile');
             setError('root', {
                 message: 'Failed to update profile. Please try again later.'
             });
+            toast.error('Failed to update profile');
         } finally {
             setIsPending(false);
         }
-    }, [auth, router, setError, setIsPending]);
+    }, [updateUser, setError, reset]);
 
-    React.useEffect(() => {
-        reset(defaultValues);
-    }, [user, reset]);
-
-
-    const handleTelInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10); // Remove non-digits & limit to 10 digits
-    };
+    const initials = user?.username?.slice(0, 2).toUpperCase() ?? 'U';
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <Card>
                 <CardHeader
                     avatar={
-                        <Avatar>
-                            <UserIcon fontSize="var(--Icon-fontSize)" />
+                        <Avatar sx={{ bgcolor: "primary.main", fontWeight: 700 }}>
+                            {initials}
                         </Avatar>
                     }
                     title="Basic details"
+                    subheader={
+                        <Typography variant="body2" color="text.secondary">
+                            {user?.fullName || user?.username || '—'} · <span style={{ opacity: 0.6 }}>{user?.role}</span>
+                        </Typography>
+                    }
                 />
                 <CardContent>
-                    <Stack spacing={3}>
-                        <Stack spacing={2}>
-                            <Controller
-                                control={control}
-                                name="firstName"
-                                render={({ field }) => (
-                                    <FormControl error={Boolean(errors.firstName)}>
-                                        <InputLabel required>First Name</InputLabel>
-                                        <OutlinedInput {...field} disabled={isPending} />
-                                        {errors.firstName && <FormHelperText>{errors.firstName.message}</FormHelperText>}
-                                    </FormControl>
-                                )}
-                            />
-                            <Controller
-                                control={control}
-                                name="lastName"
-                                render={({ field }) => (
-                                    <FormControl error={Boolean(errors.lastName)}>
-                                        <InputLabel required>Last name</InputLabel>
-                                        <OutlinedInput {...field} disabled={isPending} />
-                                        {errors.lastName && <FormHelperText>{errors.lastName.message}</FormHelperText>}
-                                    </FormControl>
-                                )}
-                            />
-                            <Controller
-                                control={control}
-                                name="phone"
-                                render={({ field }) => (
-                                    <FormControl error={Boolean(errors.phone)}>
-                                        <InputLabel required>Phone number</InputLabel>
-                                        <OutlinedInput {...field} type="tel" inputProps={{
-                                            maxLength: 10,
-                                            pattern: "[0-9]*", 
-                                        }}  disabled={isPending} onInput={handleTelInput} />
-                                        {errors.phone && <FormHelperText>{errors.phone.message}</FormHelperText>}
-                                    </FormControl>
-                                )}
-                            />
-                            {errors.root && <Alert severity="error">{errors.root.message}</Alert>}
-                        </Stack>
+                    <Stack spacing={2}>
+                        {/* Read-only username */}
+                        <FormControl disabled>
+                            <InputLabel>Username</InputLabel>
+                            <OutlinedInput value={user?.username ?? ''} label="Username" readOnly />
+                        </FormControl>
+
+                        {/* Editable full name */}
+                        <Controller
+                            control={control}
+                            name="fullName"
+                            render={({ field }) => (
+                                <FormControl fullWidth error={Boolean(errors.fullName)}>
+                                    <InputLabel required>Full Name</InputLabel>
+                                    <OutlinedInput {...field} label="Full Name" disabled={isPending} />
+                                    {errors.fullName && <FormHelperText>{errors.fullName.message}</FormHelperText>}
+                                </FormControl>
+                            )}
+                        />
+
+                        {errors.root && <Alert severity="error">{errors.root.message}</Alert>}
                     </Stack>
                 </CardContent>
                 <CardActions sx={{ justifyContent: "flex-end" }}>
-                    <Button
-                        onClick={handleCancel}
-                        disabled={isPending || !isDirty}
-                        variant="text" 
-                    >
+                    <Button onClick={handleCancel} disabled={isPending || !isDirty} variant="text">
                         Cancel
                     </Button>
                     <Button

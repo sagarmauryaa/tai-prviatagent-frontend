@@ -62,13 +62,13 @@ export function MainNav({ items = [] }: MainNavProps) {
 					className="header-container"
 				> 
 
-					<Stack
+				<Stack
 						direction="row"
 						spacing={1.5}
 						sx={{ alignItems: "center", flex: "1 1 auto", justifyContent: "flex-end" }}
 					> 
-						<UserButton />
-					</Stack>
+					<UserButton />
+				</Stack>
 				</Box>
 			</Box>
 			<MobileNav
@@ -85,6 +85,8 @@ export function MainNav({ items = [] }: MainNavProps) {
 function UserButton() {
 	const popover = usePopover();
 	const { user } = useAuth();
+
+	const initials = user?.fullName?.slice(0, 2).toUpperCase() ?? "U";
 
 	return (
 		<React.Fragment>
@@ -109,9 +111,8 @@ function UserButton() {
 					}}
 					variant="dot"
 				>
-					<Avatar sx={{ bgcolor: "primary.main" }}>
-						{user?.firstName?.[0]}
-						{user?.lastName?.[0]}
+					<Avatar sx={{ bgcolor: "primary.main", fontWeight: 700, fontSize: "0.8rem" }}>
+						{initials}
 					</Avatar>
 				</Badge>
 			</Box>

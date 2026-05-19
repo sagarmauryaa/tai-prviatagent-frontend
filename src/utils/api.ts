@@ -6,26 +6,20 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import { V4_APIS } from "./config";
+import Cookies from "js-cookie";
 
 const { ERR_NETWORK, ECONNABORTED } = HTTP_CODE;
 
-const axiosInstance: AxiosInstance = axios.create({ 
-  // baseURL: 'http://localhost:4300/dashboard/' 
-  baseURL: `${V4_APIS}/dashboard/` 
+const axiosInstance: AxiosInstance = axios.create({
+  baseURL: `${process.env.BACKEND_ENDPOINT}/api/v1/`,
 });
 
-/* The `axiosInstance.interceptors.request.use()` function is adding a request interceptor to the Axios
-instance. This interceptor is used to modify the outgoing request before it is sent.. */
-
+/* Request interceptor — attaches the JWT Bearer token from cookies to every request */
 axiosInstance.interceptors.request.use(
   (req: InternalAxiosRequestConfig<any>) => {
-    // const X_ACCESS_KEY = process.env.REACT_APP_X_ACCESS_ENCRYPTED_API_KEY;
-    const X_ACCESS_KEY = "8521404a389eb8d58a46cd1a8c84426a:0ce6bc92069524e9ece234a8c0aeab24c9b852ff361eceb2757e1b687c637f0ef5edb5ef3207c66d322df5e20ce483aa2db5b7a85daa75dc1f7b6551ad7c89c78c885a70b5180aac97efb853aa40c446";
-
-
-    if (X_ACCESS_KEY && X_ACCESS_KEY.trim() !== "") {
-      req.headers["x-api-key"] = X_ACCESS_KEY;
+    const token = Cookies.get("access_token");
+    if (token) {
+      req.headers["Authorization"] = `Bearer ${token}`;
     }
     return req;
   },

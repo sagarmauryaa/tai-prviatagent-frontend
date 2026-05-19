@@ -2,14 +2,18 @@
 import axiosInstance from "./api";
 import Cookies from 'js-cookie';
 import { generateDateRange } from "./generateDateRange";
-import { V4_APIS } from "./config";
+import { BACKEND_ENDPOINT } from "./config";
 import { AxiosProgressEvent } from "axios";
 
 
-export const LoginDashboard = (data: { email: string, password: string }) => {
-    const response = axiosInstance.post(`sign-in`, data);
+export const LoginDashboard = (data: { username: string, pass: string }) => {
+    const response = axiosInstance.post(`auth/login`, data);
     return response
 }
+
+export const updateMyProfile = (data: { fullName: string }) => {
+    return axiosInstance.put(`auth/basic-details`, data);
+};
 
 export const updateMagentoConfig = (data: { domains?: string; apiKey?: string }) => {
     const authToken = Cookies.get("access_token");
@@ -25,15 +29,15 @@ export const getMagentoConfig = () => {
     });
 }
 
-export const updateProfile = (data: { userId: string; firstName: string; lastName: string; }) => {
-    const response = axiosInstance.put(`profile`, data);
-    return response
-}
 
 export const resetPassword = (data: { userId: string; newPassword: string; confirmPassword: string; }) => {
     const response = axiosInstance.put(`reset-password`, data);
     return response
 }
+
+export const changeMyPassword = (data: { oldPassword: string; newPassword: string }) => {
+    return axiosInstance.put(`auth/change-password`, data);
+};
 export const setPassword = (data: { userId: string; password: string; confirmPassword: string; }) => {
     const response = axiosInstance.post(`set-password`, data);
     return response
@@ -184,7 +188,7 @@ export const transcribeAudioToSpeech = async (audio: Blob) => {
     const formData = new FormData();
     formData.append('audio', audio);
 
-    const response = await fetch(`${V4_APIS}/temp-media-upload/audio-to-text`, {
+    const response = await fetch(`${BACKEND_ENDPOINT}/temp-media-upload/audio-to-text`, {
         method: 'POST',
         body: formData,
     });

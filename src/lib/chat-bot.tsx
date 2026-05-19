@@ -1,5 +1,5 @@
 'use client';
-import { BRAND_PAGE_URL, CHATBOT_URL, SUPPORT_CHATBOT, V4_APIS } from '@/utils/config';
+import { BRAND_PAGE_URL, CHATBOT_URL, SUPPORT_CHATBOT, BACKEND_ENDPOINT } from '@/utils/config';
 import { useEffect } from 'react'
 import { clearChatStorage, saveLocalChat } from './chat-storage';
 
@@ -7,7 +7,7 @@ const ChatBot = () => {
     async function initChatBot(id: string) {
         console.log('Initializing ChatBot with ID:', id);
         const checkChatbotVisibilityToShow = async () => {
-            const response = await fetch(`${V4_APIS}/chat-bot/check-visibility/${id}`);
+            const response = await fetch(`${BACKEND_ENDPOINT}/chat-bot/check-visibility/${id}`);
             if (!response.ok) {
                 return;
             }

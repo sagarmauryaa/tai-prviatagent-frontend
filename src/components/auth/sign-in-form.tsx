@@ -19,24 +19,21 @@ import { EyeSlash as EyeSlashIcon } from "@phosphor-icons/react/dist/ssr/EyeSlas
 import { Controller, useForm } from "react-hook-form";
 import { z as zod } from "zod";
 import Cookies from 'js-cookie'
-import { useAuth } from "@/components/auth/auth-context";
 import { DynamicLogo } from "@/components/core/logo";
 import { toast } from "@/components/core/toaster";
 import { LoginDashboard } from "@/utils/backend-endpoints";
 import { CircularProgress } from "@mui/material";
 import { paths } from "@/paths";
-import { APP_ENV } from "@/utils/config";
 
 const schema = zod.object({
-    email: zod.string().min(1, { message: "Email is required" }).email(),
-    password: zod.string().min(1, { message: "Password is required" }),
+    username: zod.string().min(1, { message: "Username is required" }),
+    pass: zod.string().min(1, { message: "Password is required" }),
 });
 
-const defaultValues = { email: "", password: "" };
+const defaultValues = { username: "", pass: "" };
 
 export function SignInForm() {
     const router = useRouter();
-    const auth = useAuth();
     const [showPassword, setShowPassword] = React.useState<boolean>(false);
     const [isPending, setIsPending] = React.useState(false);
 
@@ -49,47 +46,35 @@ export function SignInForm() {
 
 
     const onSubmit = React.useCallback(
-        async (body: { email: string, password: string }) => {
+        async (body: { username: string, pass: string }) => {
             try {
                 setIsPending(true);
-                const { data, status } = await LoginDashboard(body);
-
+                const { data : dataFetched, status } = await LoginDashboard(body); 
                 if (status === 200) {
-                    const { userId, lastName, firstName, email, phone, token, brands, subscription } = data?.data;
-                    auth.setUser({ userId, lastName, firstName, email, phone });
-                    if (brands.length > 0) {
-                        auth.setBrands(brands);
-                        auth.setSelectedBrand(brands[0]);
-                    }
-                    if (subscription) {
-                        if (typeof subscription === 'string' && subscription === "Activeted free plan") {
-                            // router.refresh();
-                            window.location.reload();
-                        } else {
-                            auth.setCurrentSubscription(subscription)
-                        }
-                    }
-                    Cookies.set('access_token', token)
-                    router.refresh();
+                    const { data } = dataFetched;
+                    const { user, token } = data; 
+
+                    // Store JWT token
+                    Cookies.set('access_token', token, { expires: 1 });
+                    // Store user info for easy access
+                    Cookies.set('user_info', JSON.stringify(user), { expires: 1 });
+                    router.push('/dashboard');
                 } else {
                     setIsPending(false);
                     toast.error('Please try again later.');
                     setError('root', {
-                        message: 'Invalid Crediential'
+                        message: 'Invalid credentials'
                     });
                     return;
                 }
             } catch (error: any) {
-                // setError('root', {
-                //     message: error?.message || 'Failed to login'
-                // });
                 setError('root', {
-                    message: 'Failed to login'
+                    message: error?.message || 'Failed to login'
                 });
                 setIsPending(false);
             }
         },
-        [auth, router, setError]
+        [router, setError]
     );
 
     return (
@@ -103,7 +88,7 @@ export function SignInForm() {
                 <Typography variant="h5">Sign in</Typography>
                 <Typography color="text.secondary" variant="body2">
                     Don&apos;t have an account?{" "}
-                    <a href={APP_ENV === 'staging' ? "https://stage.tellofy.ai/signup-for-tai-from-tellofy-ai-your-own-voice-enabled-ai-agent-grounded-on-your-data-only/" : "https://tellofy.ai/free-signup-for-tai/"} target="_blank">
+                    <a href="https://tellofy.ai/free-signup-for-tai/" target="_blank">
                         Sign up
                     </a>
                 </Typography>
@@ -114,20 +99,20 @@ export function SignInForm() {
                         <Stack spacing={2}>
                             <Controller
                                 control={control}
-                                name="email"
+                                name="username"
                                 render={({ field }) => (
-                                    <FormControl error={Boolean(errors.email)}>
-                                        <InputLabel>Email address</InputLabel>
-                                        <OutlinedInput {...field} type="email" />
-                                        {errors.email ? <FormHelperText>{errors.email.message}</FormHelperText> : null}
+                                    <FormControl error={Boolean(errors.username)}>
+                                        <InputLabel>Username</InputLabel>
+                                        <OutlinedInput {...field} type="text" />
+                                        {errors.username ? <FormHelperText>{errors.username.message}</FormHelperText> : null}
                                     </FormControl>
                                 )}
                             />
                             <Controller
                                 control={control}
-                                name="password"
+                                name="pass"
                                 render={({ field }) => (
-                                    <FormControl error={Boolean(errors.password)}>
+                                    <FormControl error={Boolean(errors.pass)}>
                                         <InputLabel>Password</InputLabel>
                                         <OutlinedInput
                                             {...field}
@@ -152,7 +137,7 @@ export function SignInForm() {
                                             }
                                             type={showPassword ? "text" : "password"}
                                         />
-                                        {errors.password ? <FormHelperText>{errors.password.message}</FormHelperText> : null}
+                                        {errors.pass ? <FormHelperText>{errors.pass.message}</FormHelperText> : null}
                                     </FormControl>
                                 )}
                             />

@@ -77,14 +77,14 @@ const MenuProps = {
 
 const InstanceForm: React.FC<InstanceFormTypes> = ({ open, handleModal = () => { }, data = null, handleFetch }) => {
     const router = useRouter();
-    const { user, getBrands, setLoading } = useAuth();
+    const { user, setLoading } = useAuth();
     const [isPending, setIsPending] = useState(false);
     // const [businessCategories, setBusinessCategories] = useState<OptionType[]>([]);
     // const [countries, setCountries] = useState<OptionType[]>([]);
     // const [states, setStates] = useState<OptionType[]>([]);
     const [brandLogo, setBrandLogo] = useState<string>('');
     const [formLoading, setFormLoading] = useState<boolean>(false);
-    const { currentSubscription } = useAuth();
+    const currentSubscription = { allowAvatar: true };
 
     const { control, handleSubmit, setError, setValue, getValues, clearErrors, formState: { errors }, reset } = useForm({
         defaultValues,
@@ -93,7 +93,7 @@ const InstanceForm: React.FC<InstanceFormTypes> = ({ open, handleModal = () => {
 
 
     const onSubmit = useCallback(async (formData: Partial<FormDataTypes>) => {
-        if (!user?.userId) {
+        if (!user?._id) {
             toast.error("Fill required field!");
             return;
         }
@@ -119,7 +119,7 @@ const InstanceForm: React.FC<InstanceFormTypes> = ({ open, handleModal = () => {
                 setIsPending(false);
                 reset(defaultValues);
                 handleModal(false);
-                getBrands();
+                // getBrands();
                 await handleFetch();
                 toast.success(`Brand instance ${data?._id ? "updated" : "added"} successfully`);
                 setLoading(false);

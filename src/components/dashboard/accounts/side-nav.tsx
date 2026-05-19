@@ -68,13 +68,13 @@ export function SideNav() {
                 }}
             >
                 <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
-                    <Avatar sx={{ bgcolor: 'primary.main' }}>
-                        {user?.firstName?.[0]}{user?.lastName?.[0]}
+                    <Avatar sx={{ bgcolor: 'primary.main', fontWeight: 700 }}>
+                        {user?.username?.slice(0, 2).toUpperCase() ?? "U"}
                     </Avatar>
                     <div>
-                        <Typography variant="subtitle1">{user?.firstName} {user?.lastName}</Typography>
+                        <Typography variant="subtitle1">{user?.fullName || user?.username}</Typography>
                         <Typography color="text.secondary" variant="caption">
-                            {user?.email}
+                            @{user?.username} · {user?.role}
                         </Typography>
                     </div>
                 </Stack>

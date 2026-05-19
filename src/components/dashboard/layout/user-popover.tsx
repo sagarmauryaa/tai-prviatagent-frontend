@@ -1,37 +1,18 @@
-"use client";
-
-import * as React from "react";
-import RouterLink from "next/link";
-import Box from "@mui/material/Box";
+"use client"; 
+import RouterLink from "next/link"; 
+import Box from "@mui/material/Box"; 
 import Divider from "@mui/material/Divider";
 import MenuItem from "@mui/material/MenuItem";
-import Popover from "@mui/material/Popover";
+import Popover from "@mui/material/Popover"; 
 import Typography from "@mui/material/Typography";
-import ThemeSwitch from "../../dashboard/layout/ThemeSwitch";
 import { List, ListItemIcon } from "@mui/material";
-import { CreditCard as CreditCardIcon } from "@phosphor-icons/react/dist/ssr/CreditCard";
 import { LockKey as LockKeyIcon } from "@phosphor-icons/react/dist/ssr/LockKey";
 import { User as UserIcon } from "@phosphor-icons/react/dist/ssr/User";
-import { SettingsButtonOption } from "@/components/core/settings/settings-option-button";
-import Cookies from 'js-cookie'
-import { redirect } from "next/navigation";
+import { SignOut as SignOutIcon } from "@phosphor-icons/react/dist/ssr/SignOut";
+import { ShieldStar as ShieldStarIcon } from "@phosphor-icons/react/dist/ssr/ShieldStar";
+import ThemeSwitch from "../../dashboard/layout/ThemeSwitch";
 import { useAuth } from "@/components/auth/auth-context";
 import { paths } from "@/paths";
- 
- 
-
-function SignOutButton() {
-	const handleLogOut = () => {
-		Cookies.remove('access_token');
-		redirect(paths.auth.signIn)
-	}
-
-	return (
-		<MenuItem onClick={handleLogOut} sx={{ justifyContent: "center" }}>
-			Sign out
-		</MenuItem>
-	);
-}
 
 export function UserPopover({
 	anchorEl,
@@ -42,8 +23,9 @@ export function UserPopover({
 	onClose: () => void;
 	open: boolean;
 }) {
-	const { user } = useAuth(); 
-	
+	const { user, signOut } = useAuth(); 
+	const displayName = user?.fullName || user?.username || "—"; 
+
 	return (
 		<Popover
 			anchorEl={anchorEl}
@@ -54,11 +36,11 @@ export function UserPopover({
 			transformOrigin={{ horizontal: "right", vertical: "top" }}
 		>
 			<Box sx={{ p: 2 }}>
-				<Typography>{user?.firstName} {user?.lastName}</Typography>
+				<Typography fontWeight={600}>{displayName}</Typography>
 				<Typography color="text.secondary" variant="body2">
-					{user?.email}
+					@{user?.username}
 				</Typography>
-			</Box> 	<Divider />
+			</Box><Divider />
 			<List sx={{ p: 1 }}>
 				<MenuItem component={RouterLink} href={paths.dashboard.account.profile} onClick={onClose}>
 					<ListItemIcon>
@@ -71,14 +53,31 @@ export function UserPopover({
 						<LockKeyIcon />
 					</ListItemIcon>
 					Security
-				</MenuItem> 
+				</MenuItem>
 				<MenuItem onClick={onClose}>
 					<ThemeSwitch />
-				</MenuItem> 
+				</MenuItem>
 			</List>
+
 			<Divider />
+
+			{/* Sign Out */}
 			<Box sx={{ p: 1 }}>
-				<SignOutButton />
+				<MenuItem
+					onClick={() => { onClose(); signOut(); }}
+					sx={{
+						borderRadius: 1.5,
+						gap: 1.5,
+						py: 1,
+						color: "error.main",
+						"&:hover": { bgcolor: "error.lighter", color: "error.dark" },
+					}}
+				>
+					<ListItemIcon sx={{ minWidth: "auto", color: "inherit" }}>
+						<SignOutIcon size={18} />
+					</ListItemIcon>
+					<Typography variant="body2" fontWeight={600} color="inherit">Sign out</Typography>
+				</MenuItem>
 			</Box>
 		</Popover>
 	);

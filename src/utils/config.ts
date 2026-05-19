@@ -1,5 +1,5 @@
 export const BRAND_PAGE_URL = process.env.BRAND_PAGE_URL || 'https://tellofy.com';
-export const V4_APIS = process.env.V4_APIS || 'https://prod-v4-survey-api.tellofy.com';
+export const BACKEND_ENDPOINT = process.env.BACKEND_ENDPOINT || 'https://prod-v4-survey-api.tellofy.com';
 export const CHATBOT_URL = process.env.CHATBOT_URL || 'https://chatwidget.tellofy.com';
 export const APP_ENV = process.env.APP_ENV;
 export const TRAIL_SUB_ID = `${APP_ENV}` === 'staging' ? '6809afaeb2980e040109cfb5' : '68206e856a019eba75f225b4';

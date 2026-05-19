@@ -74,7 +74,7 @@ const WebPageForm = ({ fetchData }: { fetchData: () => Promise<void> }) => {
 
     const startStreaming = (jobId: string) => {
         const eventSource = new EventSource(
-            `${process.env.V4_APIS}/dashboard/stream/${jobId}`
+            `${process.env.BACKEND_ENDPOINT}/dashboard/stream/${jobId}`
         );
 
         let hasError = false;

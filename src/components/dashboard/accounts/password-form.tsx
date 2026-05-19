@@ -15,15 +15,11 @@ import { Password as PasswordIcon } from "@phosphor-icons/react/dist/ssr/Passwor
 import { Alert, CircularProgress, FormHelperText } from "@mui/material";
 import { z as zod } from "zod";
 import { toast } from "sonner";
-import Cookies from 'js-cookie';
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@/components/auth/auth-context";
-import { useRouter } from "next/navigation";
-import { resetPassword } from "@/utils/backend-endpoints";
+import { changeMyPassword } from "@/utils/backend-endpoints";
 
 const schema = zod.object({
-    userId: zod.string().min(1, { message: "User ID is required" }),
     oldPassword: zod.string().min(1, { message: "Old password is required" }),
     newPassword: zod.string()
         .min(8, { message: "Password must be at least 8 characters" })
@@ -40,13 +36,9 @@ const schema = zod.object({
 type FormValues = zod.infer<typeof schema>;
 
 export function PasswordForm() {
-    const auth = useAuth();
-    const router = useRouter();
-    const { user } = auth;
     const [isPending, setIsPending] = React.useState(false);
 
     const defaultValues: FormValues = {
-        userId: user?.userId ?? '',
         oldPassword: '',
         newPassword: '',
         confirmPassword: ''
@@ -68,46 +60,36 @@ export function PasswordForm() {
     };
 
     const onSubmit = React.useCallback(async (data: FormValues) => {
-        if (!data.userId || !data.newPassword || !data.confirmPassword) {
-            toast.error('Please fill in all required fields');
-            return;
-        }
-
         try {
             setIsPending(true);
-            const { data: response, status } = await resetPassword(data);
+            const { status } = await changeMyPassword({
+                oldPassword: data.oldPassword,
+                newPassword: data.newPassword
+            });
 
             if (status === 200) {
-                const { userId, lastName, firstName, email, phone, token } = response.data; 
-                auth.setUser({ userId, lastName, firstName, email, phone });
-                Cookies.set('access_token', token);
-                toast.success('Profile updated successfully');
-                router.refresh();
+                toast.success('Password updated successfully');
+                reset(defaultValues);
             } else {
                 throw new Error('Update failed');
             }
         } catch (error: any) {
+            console.error(error);
             setError('root', {
-                message: error?.message || 'Failed to update'
+                message: error?.message || 'Failed to update password. Please verify your old password.'
             });
-            setIsPending(false);
+            toast.error('Failed to update password');
         } finally {
             setIsPending(false);
         }
-    }, [auth, router, setError, setIsPending]);
-
-    React.useEffect(() => {
-        reset(defaultValues);
-    }, [user, reset]);
-
+    }, [reset, setError]);
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-
             <Card>
                 <CardHeader
                     avatar={
-                        <Avatar>
+                        <Avatar sx={{ bgcolor: 'primary.main' }}>
                             <PasswordIcon fontSize="var(--Icon-fontSize)" />
                         </Avatar>
                     }
@@ -122,7 +104,7 @@ export function PasswordForm() {
                                 render={({ field }) => (
                                     <FormControl error={Boolean(errors.oldPassword)}>
                                         <InputLabel required>Old password</InputLabel>
-                                        <OutlinedInput {...field} disabled={isPending} type="password" />
+                                        <OutlinedInput {...field} label="Old password" disabled={isPending} type="password" />
                                         {errors.oldPassword && <FormHelperText>{errors.oldPassword.message}</FormHelperText>}
                                     </FormControl>
                                 )}
@@ -133,7 +115,7 @@ export function PasswordForm() {
                                 render={({ field }) => (
                                     <FormControl error={Boolean(errors.newPassword)}>
                                         <InputLabel required>New password</InputLabel>
-                                        <OutlinedInput {...field} disabled={isPending} type="password" />
+                                        <OutlinedInput {...field} label="New password" disabled={isPending} type="password" />
                                         {errors.newPassword && <FormHelperText>{errors.newPassword.message}</FormHelperText>}
                                     </FormControl>
                                 )}
@@ -144,7 +126,7 @@ export function PasswordForm() {
                                 render={({ field }) => (
                                     <FormControl error={Boolean(errors.confirmPassword)}>
                                         <InputLabel required>Re-type new password</InputLabel>
-                                        <OutlinedInput {...field} disabled={isPending} type="password" />
+                                        <OutlinedInput {...field} label="Re-type new password" disabled={isPending} type="password" />
                                         {errors.confirmPassword && <FormHelperText>{errors.confirmPassword.message}</FormHelperText>}
                                     </FormControl>
                                 )}
@@ -161,7 +143,10 @@ export function PasswordForm() {
                             </FormHelperText>
                             {errors.root && <Alert severity="error">{errors.root.message}</Alert>}
                         </Stack>
-                        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+                            <Button onClick={handleCancel} disabled={isPending || !isDirty} variant="text">
+                                Cancel
+                            </Button>
                             <Button
                                 type="submit"
                                 variant="contained"
@@ -175,6 +160,5 @@ export function PasswordForm() {
                 </CardContent>
             </Card>
         </form>
-
     );
 }

@@ -13,7 +13,6 @@ import { CaretRight as CaretRightIcon } from "@phosphor-icons/react/dist/ssr/Car
 
 import { paths } from "@/paths";
 import { isNavItemActive } from "@/lib/is-nav-item-active";
-import { useAuth } from "@/components/auth/auth-context";
 import { Logo } from "@/components/core/logo";
 
 import { icons } from "../nav-icons"; 
@@ -40,7 +39,7 @@ export function SideNav({ color = "evident", items = [], onClose }: SideNavProps
 
 	const styles = navColorStyles[theme][color];
 	const logoColor = logoColors[theme][color];
-	const { currentSubscription } = useAuth();
+	// useAuth available if needed for user-specific nav filtering
 
 	return (
 		<Box

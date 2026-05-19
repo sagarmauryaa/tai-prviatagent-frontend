@@ -21,7 +21,7 @@ export function SSOLoginClient() {
 
         try {
             const res = await fetch(
-                `${process.env.V4_APIS}/dashboard/verify-sso`,
+                `${process.env.BACKEND_ENDPOINT}/dashboard/verify-sso`,
                 {
                     method: "POST",
                     headers: {

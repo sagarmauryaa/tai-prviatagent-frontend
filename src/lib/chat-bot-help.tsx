@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { HelpOutlineSharp } from '@mui/icons-material';
 import { Button } from '@mui/material';
-import { BRAND_PAGE_URL, CHATBOT_URL, SUPPORT_CHATBOT, V4_APIS } from '@/utils/config';
+import { BRAND_PAGE_URL, CHATBOT_URL, SUPPORT_CHATBOT, BACKEND_ENDPOINT } from '@/utils/config';
 
 const ChatBotHelp = () => {
     const [isVisible, setIsVisible] = useState(false);
@@ -18,7 +18,7 @@ const ChatBotHelp = () => {
 
     const checkChatbotVisibilityToShow = async (id: string) => {
         try {
-            const response = await fetch(`${V4_APIS}/chat-bot/check-visibility/${id}`);
+            const response = await fetch(`${BACKEND_ENDPOINT}/chat-bot/check-visibility/${id}`);
             if (response.ok) {
                 const { data } = await response.json();
                 setIsVisible(data?.chatbotVisibility === true || data?.chatbotVisibility === 'true');

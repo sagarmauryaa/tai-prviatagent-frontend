@@ -9,17 +9,16 @@ import { WifiHigh as WifiHighIcon } from "@phosphor-icons/react/dist/ssr/WifiHig
 import { Buildings as BuildingsIcon } from "@phosphor-icons/react/dist/ssr/Buildings";
 
 export default function Page() {
-	const { user, brands, currentSubscription } = useAuth();
+	const { user } = useAuth();
 	const theme = useTheme();
 	const isDark = theme.palette.mode === "dark";
 
-	const fullName = user ? `${user.firstName} ${user.lastName}`.trim() : "—"; 
-	const projectCount = brands?.length ?? 0;
+	const projectCount = user?.projects?.length ?? 0;
 
 	const infoCards = [
 		{
 			label: "Role",
-			value: "Admin",
+			value: user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "—",
 			icon: <UserIcon size={20} weight="duotone" />,
 		},
 		{
@@ -66,11 +65,8 @@ export default function Page() {
 						variant="h5"
 						sx={{ fontWeight: 700, lineHeight: 1.2, color: "text.primary" }}
 					>
-						Welcome, {fullName || ""}
-					</Typography>
-					<Typography variant="body2" sx={{ color: "text.secondary", mt: 0.25 }}>
-						{user?.email ?? ""}
-					</Typography>
+						Welcome, {user?.fullName || user?.username || ""}
+					</Typography> 
 				</Box>
 			</Stack>
 

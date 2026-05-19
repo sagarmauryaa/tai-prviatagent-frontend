@@ -18,7 +18,7 @@ import { Replay } from "@mui/icons-material";
 import { DashboardFilters } from "./style";
 
 const OverviewFilter = ({ filters = { type: "month", start_date: "", end_date: "", brand: "all" }, setFilters = () => { }, handleApplyFilter = () => { } }: { filters: { type?: string; start_date?: string; end_date?: string; brand?: string }, setFilters: (filters: any) => void, handleApplyFilter: (e: any) => void }) => {
-	const { brands } = useAuth();
+	// brands concept replaced by projects in new backend
 
 
 	const handleSortChange = (event: any) => {
@@ -74,21 +74,7 @@ const OverviewFilter = ({ filters = { type: "month", start_date: "", end_date: "
 							/>
 						</LocalizationProvider>
 					) : null}
-					<Stack className="filter-dropdown">
-						<InputLabel>Brand</InputLabel>
-						<Select name="brand" label="Brand" onChange={handleSortChange} value={filters.brand}>
-							<Option value={'all'}>
-								All Instances
-							</Option>
-							{
-								brands?.map((brand) => (
-									<Option key={brand._id} value={brand._id}>
-										{brand.name}
-									</Option>
-								))
-							}
-						</Select>
-					</Stack>
+
 				</Stack>
 				<Button type="submit" variant="contained" onClick={handleApplyFilter} sx={{ flex: "1 1 auto", height: 38, mt: 'auto', mb: '2px' }}>
 					Apply Filters

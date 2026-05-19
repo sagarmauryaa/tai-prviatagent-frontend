@@ -1,4 +1,4 @@
-import { BRAND_PAGE_URL, CHATBOT_URL, V4_APIS } from "@/utils/config";
+import { BRAND_PAGE_URL, CHATBOT_URL, BACKEND_ENDPOINT } from "@/utils/config";
 
 // export const IntegrationCode = (key: string) => {
 //   return `
@@ -59,7 +59,7 @@ import { BRAND_PAGE_URL, CHATBOT_URL, V4_APIS } from "@/utils/config";
 
 
 //     const checkChatbotVisibilityToShow = async () => {
-//       const response = await fetch('${V4_APIS}/chat-bot/check-visibility/${key}');
+//       const response = await fetch('${BACKEND_ENDPOINT}/chat-bot/check-visibility/${key}');
 //   if (!response.ok) {
 //     return;
 //   }
@@ -382,7 +382,7 @@ function getStorageKey(base) {
 
 
   const checkChatbotVisibilityToShow = async () => {
-    const response = await fetch('${V4_APIS}/chat-bot/check-visibility/${key}');
+    const response = await fetch('${BACKEND_ENDPOINT}/chat-bot/check-visibility/${key}');
     if (!response.ok) {
       return;
     }
@@ -677,7 +677,7 @@ export const reviewCodeScript = (id: string, apikey: string, url: string) => {
         apiKey="${apikey}"
         brandId="${id}"
         brandUrl="${BRAND_PAGE_URL}/brand/${url}"
-        apiUrl="${V4_APIS}/brand/rating-reviews-stats"
+        apiUrl="${BACKEND_ENDPOINT}/brand/rating-reviews-stats"
         async=true
         type="text/javascript"
       ></script>
