@@ -11,9 +11,17 @@ export const LoginDashboard = (data: { username: string, pass: string }) => {
     return response
 }
 
+export const checkSession = () => {
+    return axiosInstance.get(`auth/session`);
+};
+
 export const updateMyProfile = (data: { fullName: string }) => {
     return axiosInstance.put(`auth/basic-details`, data);
-};
+}; 
+
+export const changeMyPassword = (data: { old: string, new: string }) => {
+    return axiosInstance.put(`auth/update-password`, data);
+}; 
 
 export const updateMagentoConfig = (data: { domains?: string; apiKey?: string }) => {
     const authToken = Cookies.get("access_token");
@@ -34,10 +42,7 @@ export const resetPassword = (data: { userId: string; newPassword: string; confi
     const response = axiosInstance.put(`reset-password`, data);
     return response
 }
-
-export const changeMyPassword = (data: { oldPassword: string; newPassword: string }) => {
-    return axiosInstance.put(`auth/change-password`, data);
-};
+ 
 export const setPassword = (data: { userId: string; password: string; confirmPassword: string; }) => {
     const response = axiosInstance.post(`set-password`, data);
     return response

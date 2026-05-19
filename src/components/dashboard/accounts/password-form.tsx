@@ -63,8 +63,8 @@ export function PasswordForm() {
         try {
             setIsPending(true);
             const { status } = await changeMyPassword({
-                oldPassword: data.oldPassword,
-                newPassword: data.newPassword
+                old: data.oldPassword,
+                new: data.newPassword
             });
 
             if (status === 200) {

@@ -2,6 +2,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import Cookies from 'js-cookie';
+import { validateSessionToken } from "@/lib/authentication/validate-session";
 
 export interface AuthUser {
     _id: string;
@@ -19,6 +20,7 @@ export interface AuthUser {
 interface AuthContextValue {
     isAuthenticated: boolean;
     isLoading: boolean;
+    isValidatingSession: boolean;
     user: AuthUser | null;
     setLoading: (status: boolean) => void;
     setUser: (user: AuthUser | null) => void;
@@ -29,6 +31,7 @@ interface AuthContextValue {
 export const AuthContext = React.createContext<AuthContextValue>({
     isAuthenticated: false,
     isLoading: true,
+    isValidatingSession: true,
     user: null,
     setUser: () => { },
     setLoading: () => { },
@@ -40,6 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [state, setState] = React.useState<Omit<AuthContextValue, 'setUser' | 'setLoading' | 'signOut' | 'updateUser'>>({
         isAuthenticated: false,
         isLoading: true,
+        isValidatingSession: true,
         user: null,
     });
     const router = useRouter();
@@ -53,9 +57,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     const signOut = () => {
-        Cookies.remove('access_token');
-        Cookies.remove('user_info');
-        setState({ isAuthenticated: false, isLoading: false, user: null });
+        // Clear token cookie (user data is only in React state, no cleanup needed)
+        Cookies.remove('access_token'); 
+        setState({ isAuthenticated: false, isLoading: false, isValidatingSession: false, user: null });
         router.push('/auth/sign-in');
     };
 
@@ -63,27 +67,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setState((prev) => {
             if (!prev.user) return prev;
             const updated = { ...prev.user, ...updates };
-            Cookies.set('user_info', JSON.stringify(updated), { expires: 1 });
             return { ...prev, user: updated };
         });
     };
 
     React.useEffect(() => {
-        const initialize = () => {
-            const token = Cookies.get('access_token');
-            const userInfoRaw = Cookies.get('user_info');
+        const initialize = async () => {
+            try {
+                // Check for token in cookies
+                const token = Cookies.get('access_token');
 
-            if (token && userInfoRaw) {
-                try {
-                    const user: AuthUser = JSON.parse(userInfoRaw);
-                    setState({ isAuthenticated: true, isLoading: false, user });
-                } catch {
-                    Cookies.remove('access_token');
-                    Cookies.remove('user_info');
-                    setState({ isAuthenticated: false, isLoading: false, user: null });
+                // If no token, skip validation
+                if (!token) {
+                    setState({ isAuthenticated: false, isLoading: false, isValidatingSession: false, user: null });
+                    return;
                 }
-            } else {
-                setState({ isAuthenticated: false, isLoading: false, user: null });
+
+                // Set validating state while checking session
+                setState((prev) => ({ ...prev, isValidatingSession: true }));
+
+                // Validate the session token with backend
+                let validatedUser: AuthUser | null = null;
+                try {
+                    validatedUser = await validateSessionToken();
+                    console.log('validatedUser:',validatedUser);
+                    
+                } catch (validationError) {
+                    // Network errors or other issues - clear token and logout
+                    console.error('[AuthProvider] Session validation error:', validationError);
+                    Cookies.remove('access_token');
+                    setState({ isAuthenticated: false, isLoading: false, isValidatingSession: false, user: null });
+                    return;
+                }
+
+                // If validation succeeded and we have user data
+                if (validatedUser) {
+                    setState({ isAuthenticated: true, isLoading: false, isValidatingSession: false, user: validatedUser });
+                } else {
+                    // Validation returned no user data, clear token and logout
+                    Cookies.remove('access_token');
+                    setState({ isAuthenticated: false, isLoading: false, isValidatingSession: false, user: null });
+                }
+            } catch (error) {
+                // Unexpected error during initialization
+                console.error('[AuthProvider] Initialization error:', error);
+                Cookies.remove('access_token');
+                setState({ isAuthenticated: false, isLoading: false, isValidatingSession: false, user: null });
             }
         };
 

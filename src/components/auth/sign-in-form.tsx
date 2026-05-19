@@ -22,6 +22,7 @@ import Cookies from 'js-cookie'
 import { DynamicLogo } from "@/components/core/logo";
 import { toast } from "@/components/core/toaster";
 import { LoginDashboard } from "@/utils/backend-endpoints";
+import { useAuth } from "@/components/auth/auth-context";
 import { CircularProgress } from "@mui/material";
 import { paths } from "@/paths";
 
@@ -34,6 +35,7 @@ const defaultValues = { username: "", pass: "" };
 
 export function SignInForm() {
     const router = useRouter();
+    const { setUser } = useAuth();
     const [showPassword, setShowPassword] = React.useState<boolean>(false);
     const [isPending, setIsPending] = React.useState(false);
 
@@ -56,8 +58,8 @@ export function SignInForm() {
 
                     // Store JWT token
                     Cookies.set('access_token', token, { expires: 1 });
-                    // Store user info for easy access
-                    Cookies.set('user_info', JSON.stringify(user), { expires: 1 });
+                    // Store user info for easy access 
+                    setUser(user); // Update React state with user data
                     router.push('/dashboard');
                 } else {
                     setIsPending(false);
