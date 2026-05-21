@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const signOut = () => {
         // Clear token cookie (user data is only in React state, no cleanup needed)
-        Cookies.remove('access_token'); 
+        Cookies.remove('access_token');
         setState({ isAuthenticated: false, isLoading: false, isValidatingSession: false, user: null });
         router.push('/auth/sign-in');
     };
@@ -90,8 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 let validatedUser: AuthUser | null = null;
                 try {
                     validatedUser = await validateSessionToken();
-                    console.log('validatedUser:',validatedUser);
-                    
+
                 } catch (validationError) {
                     // Network errors or other issues - clear token and logout
                     console.error('[AuthProvider] Session validation error:', validationError);

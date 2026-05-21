@@ -22,6 +22,8 @@ import {
     useTheme,
 } from "@mui/material";
 import RouterLink from "next/link";
+import { useRouter } from 'next/navigation';
+import { updateBrandInstance, deleteBrandInstance } from '@/utils/backend-endpoints';
 import { paths } from "@/paths";
 import { ArrowLeft as ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
 import { FolderOpen as FolderOpenIcon } from "@phosphor-icons/react/dist/ssr/FolderOpen";
@@ -35,6 +37,7 @@ import { Warning as WarningIcon } from "@phosphor-icons/react/dist/ssr/Warning";
 import { CalendarBlank as CalendarIcon } from "@phosphor-icons/react/dist/ssr/CalendarBlank";
 import { IdentificationCard as IdIcon } from "@phosphor-icons/react/dist/ssr/IdentificationCard";
 import { toast } from "sonner";
+import { addUserToInstance, removeUserFromInstance } from '@/utils/backend-endpoints';
 
 // ─── Static mock data ─────────────────────────────────────────────────────────
 const MOCK_PROJECT = {
@@ -153,17 +156,22 @@ function StatCard({ label, value, icon }: { label: string; value: string | numbe
 }
 
 // ─── Rename Section ───────────────────────────────────────────────────────────
-function RenameSection({ initialName }: { initialName: string }) {
+function RenameSection({ initialName, onRename }: { initialName: string; onRename?: (newName: string) => Promise<void> | void }) {
     const [editing, setEditing] = React.useState(false);
     const [value, setValue] = React.useState(initialName);
     const [saved, setSaved] = React.useState(initialName);
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!value.trim()) { toast.error("Project name cannot be empty"); return; }
-        // TODO: call rename API here
-        setSaved(value.trim());
-        setEditing(false);
-        toast.success("Project renamed successfully");
+        try {
+            if (onRename) await onRename(value.trim());
+            setSaved(value.trim());
+            setEditing(false);
+            toast.success("Project renamed successfully");
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to rename project");
+        }
     };
     const handleCancel = () => { setValue(saved); setEditing(false); };
 
@@ -339,15 +347,43 @@ function UsersTab() {
     const [addModalOpen, setAddModalOpen] = React.useState(false);
 
     const handleAdd = (user: typeof AVAILABLE_USERS[0]) => {
-        // TODO: call add-user-to-project API
-        setAssignedUsers((prev) => [...prev, { ...user, role: "Member" }]);
-        toast.success(`${user.name} added to project`);
+        (async () => {
+            try {
+                // optimistic update
+                setAssignedUsers((prev) => [...prev, { ...user, role: "Member" }]);
+                const { status } = await addUserToInstance(projectId, user.id);
+                if (status === 200) {
+                    toast.success(`${user.name} added to project`);
+                    return;
+                }
+                throw new Error('Add user failed');
+            } catch (err) {
+                console.error(err);
+                // rollback
+                setAssignedUsers((prev) => prev.filter((u) => u.id !== user.id));
+                toast.error('Failed to add user to project');
+            }
+        })();
     };
 
     const handleRemove = (userId: string) => {
-        // TODO: call remove-user-from-project API
-        setAssignedUsers((prev) => prev.filter((u) => u.id !== userId));
-        toast.success("User removed from project");
+        (async () => {
+            try {
+                // optimistic remove
+                const prevUsers = assignedUsers;
+                setAssignedUsers((prev) => prev.filter((u) => u.id !== userId));
+                const { status } = await removeUserFromInstance(projectId, userId);
+                if (status === 200) {
+                    toast.success('User removed from project');
+                    return;
+                }
+                throw new Error('Remove failed');
+            } catch (err) {
+                console.error(err);
+                // rollback by refetching or restoring prev state is not available here, show error
+                toast.error('Failed to remove user from project');
+            }
+        })();
     };
 
     return (
@@ -421,15 +457,30 @@ function UsersTab() {
 }
 
 // ─── Settings Tab ─────────────────────────────────────────────────────────────
-function SettingsTab({ project }: { project: typeof MOCK_PROJECT }) {
+function SettingsTab({ project, projectId, onRename }: { project: typeof MOCK_PROJECT; projectId: string; onRename?: (newName: string) => Promise<void> | void }) {
+    const router = useRouter();
     const [confirmed, setConfirmed] = React.useState(false);
     const theme = useTheme();
     const isDark = theme.palette.mode === "dark";
 
-    const handleDelete = () => {
+    const [isDeleting, setIsDeleting] = React.useState(false);
+    const handleDelete = async () => {
         if (!confirmed) { toast.error("Please confirm deletion first"); return; }
-        // TODO: call delete-project API
-        toast.success("Project deleted (stub)");
+        setIsDeleting(true);
+        try {
+            const { status } = await deleteBrandInstance(projectId);
+            if (status === 200) {
+                toast.success("Project deleted");
+                router.push('/dashboard/projects');
+                return;
+            }
+            throw new Error('Delete failed');
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to delete project');
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     return (
@@ -444,7 +495,7 @@ function SettingsTab({ project }: { project: typeof MOCK_PROJECT }) {
             >
                 <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>General</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>Update the display name of this project.</Typography>
-                <RenameSection initialName={project.name} />
+                <RenameSection initialName={project.name} onRename={onRename} />
             </Box>
 
             {/* Danger Zone */}
@@ -481,11 +532,11 @@ function SettingsTab({ project }: { project: typeof MOCK_PROJECT }) {
                     variant="contained"
                     color="error"
                     size="small"
-                    disabled={!confirmed}
+                    disabled={!confirmed || isDeleting}
                     startIcon={<TrashIcon size={16} />}
                     onClick={handleDelete}
                 >
-                    Delete Project
+                    {isDeleting ? 'Deleting...' : 'Delete Project'}
                 </Button>
             </Box>
         </Stack>
@@ -496,6 +547,19 @@ function SettingsTab({ project }: { project: typeof MOCK_PROJECT }) {
 export default function ProjectDetail({ projectId }: { projectId: string }) {
     const [tab, setTab] = React.useState(0);
     const project = MOCK_PROJECT; // swap with real fetch once API is ready
+    const router = useRouter();
+
+    const handleRename = async (newName: string) => {
+        // call updateBrandInstance
+        try {
+            const { status } = await updateBrandInstance(projectId, { name: newName });
+            if (status === 200) return;
+            throw new Error('Failed to rename');
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
+    };
 
     return (
         <Stack spacing={4}>
@@ -513,7 +577,7 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
                 </Button>
 
                 {/* Page title */}
-                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 0.5 }}> 
+                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 0.5 }}>
                     <Typography variant="h4" fontWeight={700}>
                         {project.name}
                     </Typography>
@@ -528,7 +592,7 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <StatCard label="Total Users" value={MOCK_USERS.length} icon={<UsersIcon size={22} weight="duotone" />} />
                 <StatCard label="Total Files" value={project.files} icon={<FolderOpenIcon size={22} weight="duotone" />} />
-                <StatCard label="Created" value={project.createdAt} icon={<CalendarIcon size={22} weight="duotone" />} /> 
+                <StatCard label="Created" value={project.createdAt} icon={<CalendarIcon size={22} weight="duotone" />} />
             </Stack>
 
             <Divider />
@@ -547,7 +611,7 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
                         iconPosition="start"
                         sx={{ minHeight: 44, gap: 0.5 }}
                     />
-                     <Tab
+                    <Tab
                         label="Users"
                         icon={<UsersIcon size={16} />}
                         iconPosition="start"
@@ -555,7 +619,7 @@ export default function ProjectDetail({ projectId }: { projectId: string }) {
                     />
                 </Tabs>
 
-                {tab === 0 && <SettingsTab project={project} />}
+                {tab === 0 && <SettingsTab project={project} projectId={projectId} onRename={handleRename} />}
                 {tab === 1 && <UsersTab />}
             </Box>
         </Stack>

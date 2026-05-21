@@ -3,6 +3,8 @@ import { appConfig } from "@/config/app";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import AddUser from "@/components/dashboard/users/AddUser";
+import ProjectsPageData from "@/components/dashboard/projects/ProjectListing";
+import UserListing from "@/components/dashboard/users/UserListing";
 
 export const metadata = { title: `Users | Dashboard | ${appConfig.name}` };
 const UsersPage = () => {
@@ -27,6 +29,8 @@ const UsersPage = () => {
             </Stack>
           </Stack>
         </Stack>
+        <UserListing />
+
       </Stack>
     </Box>
   )

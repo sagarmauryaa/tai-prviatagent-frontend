@@ -11,24 +11,20 @@ import { AuthUser } from "@/components/auth/auth-context";
  * @throws {Error} If validation fails due to network error
  */
 export async function validateSessionToken(): Promise<AuthUser | null> {
-//   const token = Cookies.get("access_token");
+  const token = Cookies.get("access_token");
 
-//   console.log('token::',token);
-  
-
-//   // If no token exists, there's no session to validate
-//   if (!token) {
-//     return null;
-//   }
+  if (!token) {
+    return null;
+  }
 
   try {
     // Call auth/session GET endpoint (token is added via axios interceptor)
-    const response = await checkSession();  
-    
-    if (response.data.status && response.data.data.user) {
+    const response = await checkSession();
+
+    if (response.data.success && response.data.data.user) {
       return response.data.data.user;
     }
- 
+
     // If response doesn't contain user data, return null
     return null;
   } catch (error: any) {

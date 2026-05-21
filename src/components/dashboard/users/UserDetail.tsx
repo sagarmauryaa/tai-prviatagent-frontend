@@ -8,6 +8,7 @@ import {
     Button,
     Checkbox,
     Chip,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -24,6 +25,10 @@ import {
 } from "@mui/material";
 import RouterLink from "next/link";
 import { paths } from "@/paths";
+
+interface UserDetailProps {
+    user: User | null;
+}
 import { ArrowLeft as ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
 import { Trash as TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
 import { Question as QuestionIcon } from "@phosphor-icons/react/dist/ssr/Question";
@@ -37,16 +42,7 @@ import { Flag as FlagIcon } from "@phosphor-icons/react/dist/ssr/Flag";
 import { Article as ArticleIcon } from "@phosphor-icons/react/dist/ssr/Article";
 import { ChatCircle as ChatIcon } from "@phosphor-icons/react/dist/ssr/ChatCircle";
 import { toast } from "sonner";
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const MOCK_USER = {
-    id: "usr-saurabh-001",
-    username: "saurabh",
-    password: "saurabh@123!",
-    isAdmin: false,
-    projects: ["EE_ProductCatalog_PDFs", "EE_PDF_Catalog"],
-    createdAt: "2026-04-03T13:22:56.470670",
-};
+import { updateUser } from "@/utils/backend-endpoints";
 
 const MOCK_PROJECTS = [
     "Magento Data",
@@ -178,12 +174,25 @@ function Card({ children, sx }: { children: React.ReactNode; sx?: object }) {
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function UserDetail({ userId }: { userId: string }) {
+export default function UserDetail({ user }: UserDetailProps) {
     const theme = useTheme();
     const isDark = theme.palette.mode === "dark";
 
-    const [isAdmin, setIsAdmin] = React.useState(MOCK_USER.isAdmin);
-    const [assignedProjects, setAssignedProjects] = React.useState<string[]>(MOCK_USER.projects);
+    const userData = user ?? {
+        _id: "",
+        fullName: "",
+        username: "",
+        role: "USER",
+        isAdmin: false,
+        projects: [],
+        canCrudFiles: false,
+        hasPrivateDocAccess: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    };
+
+    const [isAdmin, setIsAdmin] = React.useState(userData.isAdmin);
+    const [assignedProjects, setAssignedProjects] = React.useState<string[]>(userData.projects);
     const [featureFlags, setFeatureFlags] = React.useState<FeatureFlagState>({
         canSelectAIModel: false,
         canEditPrivAgentMd: false,
@@ -201,13 +210,41 @@ export default function UserDetail({ userId }: { userId: string }) {
     );
     const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
 
+    const [isSaving, setIsSaving] = React.useState(false);
+    const [formData, setFormData] = React.useState({
+        fullName: userData.fullName || '',
+        username: userData.username || '',
+        role: (userData.role || (userData.isAdmin ? 'ADMIN' : 'USER')).toString().toUpperCase(),
+    });
+
     const handleFlagChange = (key: keyof FeatureFlagState) => (e: React.ChangeEvent<HTMLInputElement>) => {
         setFeatureFlags((prev) => ({ ...prev, [key]: e.target.checked }));
     };
 
-    const formattedDate = new Date(MOCK_USER.createdAt).toLocaleDateString("en-GB", {
+    const formattedDate = new Date(userData.createdAt).toLocaleDateString("en-GB", {
         day: "2-digit", month: "short", year: "numeric",
     });
+
+    const handleSave = async () => {
+        if (!userData._id) return toast.error('Invalid user');
+        if (!formData.username.trim()) return toast.error('Username is required');
+
+        setIsSaving(true);
+        try {
+            const payload: any = {};
+            if (formData.fullName && formData.fullName.trim()) payload.fullName = formData.fullName.trim();
+            if (formData.username && formData.username.trim()) payload.username = formData.username.trim().toLowerCase();
+            if (formData.role && formData.role.trim()) payload.role = formData.role.trim();
+
+            await updateUser(userData._id, payload);
+            toast.success('User updated successfully');
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to update user');
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return (
         <Stack spacing={3}>
@@ -243,23 +280,32 @@ export default function UserDetail({ userId }: { userId: string }) {
                                     color: "primary.contrastText",
                                 }}
                             >
-                                {MOCK_USER.username.slice(0, 2).toUpperCase()}
+                                {userData.username.slice(0, 2).toUpperCase()}
                             </Avatar>
                             <Box>
-                                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                                    <Typography variant="h6" fontWeight={700}>
-                                        {MOCK_USER.username}
-                                    </Typography>
-                                    <Chip
-                                        label={MOCK_USER.isAdmin ? "Admin" : "USER"}
+                                <Stack spacing={1} sx={{ minWidth: 0 }}>
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                        <TextField
+                                            size="small"
+                                            label="Full name"
+                                            value={formData.fullName}
+                                            onChange={(e) => setFormData((p) => ({ ...p, fullName: e.target.value }))}
+                                            disabled={isSaving}
+                                            sx={{ minWidth: 220 }}
+                                        />
+                                    </Stack>
+                                    <TextField
                                         size="small"
-                                        color={MOCK_USER.isAdmin ? "primary" : "default"}
-                                        sx={{ height: 20, fontSize: "0.68rem", fontWeight: 700 }}
+                                        label="Username"
+                                        value={formData.username}
+                                        onChange={(e) => setFormData((p) => ({ ...p, username: e.target.value }))}
+                                        disabled={isSaving}
+                                        sx={{ maxWidth: 320 }}
                                     />
+                                    <Typography variant="caption" color="text.disabled" sx={{ mt: 0.25, display: "block" }}>
+                                        ID: {userData._id}
+                                    </Typography>
                                 </Stack>
-                                <Typography variant="caption" color="text.disabled" sx={{ mt: 0.25, display: "block" }}>
-                                    ID: {MOCK_USER.id}
-                                </Typography>
                             </Box>
                         </Stack>
 
@@ -279,7 +325,7 @@ export default function UserDetail({ userId }: { userId: string }) {
 
                     {/* Stat Pills Row */}
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ mt: 2.5 }}>
-                        <StatPill icon={<FolderIcon size={16} weight="duotone" />} label="Projects" value={`${MOCK_USER.projects.length} assigned`} />
+                        <StatPill icon={<FolderIcon size={16} weight="duotone" />} label="Projects" value={`${userData.projects.length} assigned`} />
                         <StatPill icon={<CalendarIcon size={16} weight="duotone" />} label="Created" value={formattedDate} />
                     </Stack>
                 </Card>
@@ -315,8 +361,8 @@ export default function UserDetail({ userId }: { userId: string }) {
                                 </Box>
                                 <Checkbox
                                     size="small"
-                                    checked={isAdmin}
-                                    onChange={(e) => setIsAdmin(e.target.checked)}
+                                    checked={formData.role === 'ADMIN'}
+                                    onChange={(e) => setFormData((p) => ({ ...p, role: e.target.checked ? 'ADMIN' : 'USER' }))}
                                 />
                             </Stack>
 
@@ -493,15 +539,17 @@ export default function UserDetail({ userId }: { userId: string }) {
 
             {/* ── Save Footer ── */}
             <Divider />
+            <Divider />
             <Stack direction="row" justifyContent="flex-end" sx={{ pb: 2 }}>
                 <Button
                     variant="contained"
                     size="medium"
-                    startIcon={<SaveIcon size={17} />}
-                    onClick={() => toast.success("User settings saved successfully")}
+                    startIcon={isSaving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon size={17} />}
+                    onClick={handleSave}
+                    disabled={isSaving}
                     sx={{ borderRadius: 1.5, px: 3 }}
                 >
-                    Save Changes
+                    {isSaving ? 'Saving...' : 'Save Changes'}
                 </Button>
             </Stack>
 
@@ -539,7 +587,7 @@ export default function UserDetail({ userId }: { userId: string }) {
                     <Typography variant="body2" color="text.secondary">
                         Are you sure you want to delete{" "}
                         <Typography component="span" variant="body2" fontWeight={700} color="text.primary">
-                            {MOCK_USER.username}
+                            {userData.username}
                         </Typography>
                         ? This action cannot be undone. The user will lose access to all assigned projects immediately.
                     </Typography>
@@ -561,7 +609,7 @@ export default function UserDetail({ userId }: { userId: string }) {
                         startIcon={<TrashIcon size={15} />}
                         onClick={() => {
                             // TODO: wire to real delete API
-                            toast.success(`User "${MOCK_USER.username}" deleted`);
+                            toast.success(`User "${userData.username}" deleted`);
                             setDeleteDialogOpen(false);
                         }}
                         sx={{ borderRadius: 1.5 }}

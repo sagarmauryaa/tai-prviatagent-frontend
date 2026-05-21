@@ -12,6 +12,8 @@ import {
 } from '@mui/material';
 import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { addBrandInstance, createProject } from '@/utils/backend-endpoints';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { toast } from 'sonner';
 
@@ -19,6 +21,7 @@ const AddProject = () => {
     const [open, setOpen] = useState(false);
     const [projectName, setProjectName] = useState('');
     const [isPending, setIsPending] = useState(false);
+    const router = useRouter();
 
     const handleClose = () => {
         setOpen(false);
@@ -34,11 +37,21 @@ const AddProject = () => {
 
         setIsPending(true);
         try {
-            // TODO: replace with real API call, e.g.:
-            // await addBrandInstance({ name: projectName });
-            console.log('Adding project:', projectName);
-            toast.success(`Project "${projectName}" added successfully`);
-            handleClose();
+            const response = await createProject({ name: projectName });
+            if (response?.status === 200) {
+                // attempt common shapes for returned id
+                const id = response?.data?.data?._id || response?.data?.data?.id || response?.data?._id || response?.data?.id;
+                toast.success(`Project "${projectName}" added successfully`);
+                handleClose();
+                if (id) {
+                    router.push(`/dashboard/projects/${id}`);
+                } else {
+                    // fallback to projects list
+                    router.push('/dashboard/projects');
+                }
+                return;
+            }
+            throw new Error('Unexpected response');
         } catch (error) {
             console.error(error);
             toast.error('Failed to add project. Please try again.');
@@ -72,7 +85,7 @@ const AddProject = () => {
                     >
                         <XIcon size={18} />
                     </IconButton>
-                </DialogTitle> 
+                </DialogTitle>
                 <DialogContent sx={{ pt: '12px !important' }}>
                     <Stack spacing={3}>
                         <TextField

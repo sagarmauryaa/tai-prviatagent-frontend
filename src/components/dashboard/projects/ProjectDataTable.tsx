@@ -2,19 +2,16 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { Button, Card, CardContent, CircularProgress, debounce, IconButton, Modal, Stack } from "@mui/material";
+import { Badge, Button, Card, CardContent, CircularProgress, debounce, IconButton, Modal, Stack } from "@mui/material";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { toast } from "sonner";
-
-import { deleteBrandInstance } from "@/utils/backend-endpoints";
-import PaginatedDataTable from "@/components/core/paginated-data-table";
-import { useAuth } from "@/components/auth/auth-context";
 import RouterLink from "next/link";
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { BRAND_PAGE_URL, REACT_APP_BASE_URL } from "@/utils/config";
+import { paths } from "@/paths";
+
+import PaginatedDataTable from "@/components/core/paginated-data-table";
+import { REACT_APP_BASE_URL } from "@/utils/config";
 import ShareInstanceModal from "@/components/core/share-instance-modal";
-import { QrCode, Share } from "@mui/icons-material";
 import QRModal from "@/components/core/qr-modal";
 const MODAL_STYLE = {
     position: 'absolute',
@@ -22,14 +19,6 @@ const MODAL_STYLE = {
     left: '50%',
     transform: 'translate(-50%, -50%)',
 };
-interface InfoDataType {
-    _id: string;
-    name: string;
-    tellofyBrandUrl: string;
-    createdTime: string;
-    modifiedTime: string;
-    chatbotVisibility?: string;
-}
 
 const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
@@ -40,47 +29,19 @@ const options: Intl.DateTimeFormatOptions = {
     hour12: false
 };
 
-const InstanceDataTable = ({ handleFetch, setPage, page, setLimit, limit, totalRecords = 0, setTotalRecords, dataRow, isLoading, setSearch, selectedData, setSelectedData, handleEditModal }: { handleFetch: () => Promise<void>, setTotalRecords: (page: number) => void, setSearch: (val: string) => void, totalRecords: number, setPage: (page: number) => void, selectedData: InfoDataType | null, setSelectedData: (data: InfoDataType) => void, page: number, setLimit: (limit: number) => void, limit: number, dataRow: InfoDataType[], isLoading: boolean, handleEditModal: (stat: boolean) => void }) => {
-    const { getBrands, setLoading } = useAuth()
+const ProjectDataTable = ({ handleFetch, setPage, page, setLimit, limit, totalRecords = 0, setTotalRecords, dataRow, isLoading, setSearch, selectedData, setSelectedData, handleEditModal }: { handleFetch: () => Promise<void>, setTotalRecords: (page: number) => void, setSearch: (val: string) => void, totalRecords: number, setPage: (page: number) => void, selectedData: Project | null, setSelectedData: (data: Project) => void, page: number, setLimit: (limit: number) => void, limit: number, dataRow: Project[], isLoading: boolean, handleEditModal: (stat: boolean) => void }) => {
     const [modalOpen, setModalOpen] = React.useState(false);
     const [isPending, setIsPending] = React.useState(false);
     const [open, setOpen] = React.useState(false);
     const [openQr, setOpenQr] = React.useState(false);
 
-    const handleOpenDelete = (data: InfoDataType) => {
+    const handleOpenDelete = (data: Project) => {
         setSelectedData(data);
         setModalOpen(true);
     };
-    const handleOpenEditModal = (data: InfoDataType) => {
+    const handleOpenEditModal = (data: Project) => {
         setSelectedData(data);
         handleEditModal(true);
-    };
-    const handleOpenShareModal = (data: InfoDataType) => {
-        setSelectedData(data);
-        setOpen(true);
-    };
-    const handleOpenQrModal = (data: InfoDataType) => {
-        setSelectedData(data);
-        setOpenQr(true);
-    };
-
-    const handleDelete = async () => {
-        if (!selectedData?._id) return toast.error("Something went wrong!");
-        setIsPending(true);
-        try {
-            const { status } = await deleteBrandInstance(selectedData?._id);
-            if (status === 200) {
-                toast.success("Brand Instance deleted successfully!");
-                handleFetch();
-                setModalOpen(false);
-                getBrands()
-                setLoading(false);
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to delete data.");
-        }
-        setIsPending(false);
     };
     function encodeId(id: string): string {
         const base64 = Buffer.from(id.toString()).toString('base64');
@@ -90,7 +51,7 @@ const InstanceDataTable = ({ handleFetch, setPage, page, setLimit, limit, totalR
 
     const columns = [
         {
-            field: "name", name: "Name", formatter: (row: InfoDataType) => (
+            field: "name", name: "Name", formatter: (row: Project) => (
                 <div className="table-data-wrapper">
                     <Typography className="table-title" variant="body2">{row.name}</Typography>
                     <Box className="additional-wrapper" sx={{ display: { xs: "flex", sm: "none" }, flexFlow: "column", alignItems: "flex-start" }}>
@@ -108,7 +69,7 @@ const InstanceDataTable = ({ handleFetch, setPage, page, setLimit, limit, totalR
                                 Added Date:
                                 <span
                                 >
-                                    {new Date(row.createdTime).toLocaleString("en-US", options)}
+                                    {new Date(row.createdAt).toLocaleString("en-US", options)}
                                 </span>
                             </Typography>
 
@@ -123,7 +84,7 @@ const InstanceDataTable = ({ handleFetch, setPage, page, setLimit, limit, totalR
                                 Updated Date:
                                 <span
                                 >
-                                    {new Date(row.modifiedTime).toLocaleString("en-US", options)}
+                                    {new Date(row.updatedAt).toLocaleString("en-US", options)}
                                 </span>
                             </Typography>
                         </Box>
@@ -139,62 +100,44 @@ const InstanceDataTable = ({ handleFetch, setPage, page, setLimit, limit, totalR
                             >
                                 Actions:
                             </Typography>
-                            {dataRow.length > 1 && (
-                                <IconButton className="btn-cstm" onClick={() => handleOpenDelete(row)}>
-                                    <DeleteIcon />
-                                </IconButton>
-                            )}
+                            <IconButton className="btn-cstm" onClick={() => handleOpenDelete(row)}>
+                                <DeleteIcon />
+                            </IconButton>
                             <IconButton className="btn-cstm" onClick={() => handleOpenEditModal(row)}>
                                 <ModeEditIcon />
                             </IconButton>
-                            <IconButton className="btn-cstm" onClick={() => handleOpenShareModal(row)}
-                            >
-                                <Share />
-                            </IconButton >
-                            <IconButton className="btn-cstm" onClick={() => handleOpenQrModal(row)}
-                            >
-                                <QrCode />
-                            </IconButton >
                         </Box>
                     </Box>
                 </div>
             )
         },
         {
-            field: "createdTime", name: "Added Date", width: '200px',
-            formatter: (row: InfoDataType) => new Date(row.createdTime).toLocaleString("en-US", options)
+            field: "createdAt", name: "Added Date", width: '200px',
+            formatter: (row: Project) => new Date(row.createdAt).toLocaleString("en-US", options)
         },
         {
-            field: "modifiedTime", name: "Updated Date", width: '200px', formatter: (row: InfoDataType) => new Date(row.modifiedTime).toLocaleString("en-US", options),
+            field: "updatedAt", name: "Updated Date", width: '200px', formatter: (row: Project) => new Date(row.updatedAt).toLocaleString("en-US", options),
         },
         {
-            formatter: (row: InfoDataType) => (
+            formatter: (row: Project) => (
                 <Stack direction="row" spacing={1} >
-                    {
-                        dataRow.length > 1 &&
-                        <IconButton
-                            onClick={() => handleOpenDelete(row)}
-                        >
-                            <DeleteIcon />
-                        </IconButton >
-                    }
-                    <IconButton onClick={() => handleOpenEditModal(row)}
+                    <IconButton
+                        component={RouterLink}
+                        href={paths.dashboard.projectDetail(row._id)}
                     >
                         <ModeEditIcon />
-                    </IconButton >
-                    <IconButton onClick={() => handleOpenShareModal(row)}
+                    </IconButton>
+                    <IconButton
+                        onClick={() => handleOpenDelete(row)}
                     >
-                        <Share />
-                    </IconButton >
-                    <IconButton  onClick={() => handleOpenQrModal(row)}
-                    >
-                        <QrCode />
+                        <DeleteIcon />
                     </IconButton >
                 </Stack>
             ), name: "Actions", width: "200px"
         },
     ];
 
+    const handleDelete = async () => { }
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         debounce(() => {
             setSearch(event.target.value);
@@ -241,4 +184,4 @@ const InstanceDataTable = ({ handleFetch, setPage, page, setLimit, limit, totalR
     )
 }
 
-export default InstanceDataTable
+export default ProjectDataTable

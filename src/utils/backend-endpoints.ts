@@ -17,11 +17,58 @@ export const checkSession = () => {
 
 export const updateMyProfile = (data: { fullName: string }) => {
     return axiosInstance.put(`auth/basic-details`, data);
-}; 
+};
 
 export const changeMyPassword = (data: { old: string, new: string }) => {
     return axiosInstance.put(`auth/update-password`, data);
-}; 
+};
+
+
+// USER CRUD 
+export const getUsers = (page: number = 1, limit: number = 10, search: string = '') => {
+    return axiosInstance.get(`users?page=${page}&limit=${limit}&search=${search}`);
+};
+export const createUser = (data: { username: string, pass: string, role: string, fullName?: string, projects?: string[], canCrudFiles?: boolean, hasPrivateDocAccess?: boolean }) => {
+    return axiosInstance.post(`users`, data);
+};
+
+export const getUser = async (userId: string) => {
+    const response = await axiosInstance.get(`users/${userId}`);
+    console.log('response', response.data);
+
+    return response;
+};
+
+export const updateUser = (userId: string, data: { fullName?: string, username?: string, pass?: string, role?: string, projects?: string[], canCrudFiles?: boolean, hasPrivateDocAccess?: boolean }) => {
+    return axiosInstance.put(`users/${userId}`, data);
+};
+
+export const deleteUser = (userId: string) => {
+    return axiosInstance.delete(`users/${userId}`);
+};
+
+// PROJECT CRUD 
+export const getProjects = (page: number = 1, limit: number = 10, search: string = '') => {
+    return axiosInstance.get(`projects?page=${page}&limit=${limit}&search=${search}`);
+};
+export const createProject = (data: { name: string, description?: string }) => {
+    return axiosInstance.post(`projects`, data);
+};
+
+export const getProject = async (projectId: string) => {
+    const response = await axiosInstance.get(`projects/${projectId}`);
+    console.log('response', response.data);
+
+    return response;
+};
+
+export const updateProject = (projectId: string, data: { name?: string, description?: string }) => {
+    return axiosInstance.put(`projects/${projectId}`, data);
+};
+
+export const deleteProject = (projectId: string) => {
+    return axiosInstance.delete(`projects/${projectId}`);
+};
 
 export const updateMagentoConfig = (data: { domains?: string; apiKey?: string }) => {
     const authToken = Cookies.get("access_token");
@@ -42,7 +89,16 @@ export const resetPassword = (data: { userId: string; newPassword: string; confi
     const response = axiosInstance.put(`reset-password`, data);
     return response
 }
- 
+
+// Instance (project) - user assignment helpers
+export const addUserToInstance = (instanceId: string, userId: string) => {
+    return axiosInstance.post(`instance/${instanceId}/users`, { userId });
+};
+
+export const removeUserFromInstance = (instanceId: string, userId: string) => {
+    return axiosInstance.delete(`instance/${instanceId}/users/${userId}`);
+};
+
 export const setPassword = (data: { userId: string; password: string; confirmPassword: string; }) => {
     const response = axiosInstance.post(`set-password`, data);
     return response

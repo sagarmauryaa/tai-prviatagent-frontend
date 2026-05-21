@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import { appConfig } from "@/config/app";
-import ProjectsPageData from "@/components/dashboard/projects/page-data";
+import ProjectsPageData from "@/components/dashboard/projects/ProjectListing";
 
 export const metadata = { title: `Projects | Dashboard | ${appConfig.name}` };
 const ProjectsPage = () => {

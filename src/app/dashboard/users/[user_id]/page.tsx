@@ -1,14 +1,28 @@
 import Box from "@mui/material/Box";
 import { appConfig } from "@/config/app";
 import UserDetail from "@/components/dashboard/users/UserDetail";
+import { getUser } from "@/utils/backend-endpoints";
+import { log } from "node:console";
 
 export const metadata = { title: `User Details | Dashboard | ${appConfig.name}` };
 
 interface Props {
-  params: { user_id: string };
+  params: Promise<{ user_id: string }>;
 }
 
-const UserDetailPage = ({ params }: Props) => {
+const UserDetailPage = async ({ params }: Props) => {
+  const { user_id } = await params;
+  let user = null;
+
+  try {
+    const response = await getUser(user_id);
+    console.log('response::', response);
+
+    user = response.data?.data?.data ?? response.data?.data ?? null;
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+  }
+
   return (
     <Box
       sx={{
@@ -18,7 +32,7 @@ const UserDetailPage = ({ params }: Props) => {
         width: "var(--Content-width)",
       }}
     >
-      <UserDetail userId={params.user_id} />
+      <UserDetail user={user} />
     </Box>
   );
 };

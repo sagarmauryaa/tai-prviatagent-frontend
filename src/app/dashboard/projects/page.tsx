@@ -1,8 +1,9 @@
 import Box from "@mui/material/Box";
-import { appConfig } from "@/config/app"; 
+import { appConfig } from "@/config/app";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import AddProject from "@/components/dashboard/projects/AddProject";
+import ProjectsPageData from "@/components/dashboard/projects/ProjectListing";
 
 export const metadata = { title: `Projects | Dashboard | ${appConfig.name}` };
 const ProjectsPage = () => {
@@ -24,9 +25,11 @@ const ProjectsPage = () => {
               <Stack direction="row" spacing={3} alignItems="center">
                 <AddProject />
               </Stack>
-              </Stack>
-            </Stack> 
+            </Stack>
+          </Stack>
         </Stack>
+        <ProjectsPageData />
+
       </Stack>
     </Box>
   )

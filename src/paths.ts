@@ -8,8 +8,9 @@ export const paths = {
 	dashboard: {
 		overview: "/dashboard",
 		privAgentMd: '/dashboard/priv-agent-md',
-		projects: '/dashboard/projects',
 		database: '/dashboard/database',
+		projects: '/dashboard/projects',
+		projectDetail: (id: string) => `/dashboard/projects/${id}`,
 		users: '/dashboard/users',
 		userDetail: (id: string) => `/dashboard/users/${id}`,
 		chatAgents: '/dashboard/chat-agents',
