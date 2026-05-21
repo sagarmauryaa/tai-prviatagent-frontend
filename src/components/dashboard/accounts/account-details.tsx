@@ -82,17 +82,7 @@ export function AccountDetails() {
         <form onSubmit={handleSubmit(onSubmit)}>
             <Card>
                 <CardHeader
-                    avatar={
-                        <Avatar sx={{ bgcolor: "primary.main", fontWeight: 700 }}>
-                            {initials}
-                        </Avatar>
-                    }
                     title="Basic details"
-                    subheader={
-                        <Typography variant="body2" color="text.secondary">
-                            {user?.fullName || user?.username || '—'} · <span style={{ opacity: 0.6 }}>{user?.role}</span>
-                        </Typography>
-                    }
                 />
                 <CardContent>
                     <Stack spacing={2}>
