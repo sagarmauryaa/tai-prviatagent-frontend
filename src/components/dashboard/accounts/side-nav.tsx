@@ -1,5 +1,5 @@
 "use client";
- 
+
 import RouterLink from "next/link";
 import { usePathname } from "next/navigation";
 import Avatar from "@mui/material/Avatar";
@@ -11,11 +11,11 @@ import { CreditCard as CreditCardIcon } from "@phosphor-icons/react/dist/ssr/Cre
 import { LockKey as LockKeyIcon } from "@phosphor-icons/react/dist/ssr/LockKey";
 import { PlugsConnected as PlugsConnectedIcon } from "@phosphor-icons/react/dist/ssr/PlugsConnected";
 import { UserCircle as UserCircleIcon } from "@phosphor-icons/react/dist/ssr/UserCircle";
-import { UsersThree as UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree"; 
+import { UsersThree as UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
 
 import { isNavItemActive } from "@/lib/is-nav-item-active";
 import { useAuth } from "@/components/auth/auth-context";
-import { paths } from "@/paths";  
+import { paths } from "@/paths";
 import { Key } from "@mui/icons-material";
 
 // NOTE: First level elements are groups.
@@ -36,7 +36,7 @@ const navItems: NavItemsType = [
         title: "",
         items: [
             { key: "account", title: "Account", href: paths.dashboard.account.profile, icon: "user-circle" },
-            { key: "security", title: "Security", href: paths.dashboard.account.security, icon: "lock-key" } 
+            { key: "security", title: "Security", href: paths.dashboard.account.security, icon: "lock-key" }
         ],
     }
 ];
@@ -49,10 +49,11 @@ const icons = {
     "users-three": UsersThreeIcon,
     "key": Key,
     bell: BellIcon,
-}; 
+};
 export function SideNav() {
     const pathname = usePathname();
-    const { user } = useAuth(); 
+    const { user } = useAuth();
+    const initials = user?.fullName?.slice(0, 2).toUpperCase() ?? "U";
 
 
     return (
@@ -69,12 +70,12 @@ export function SideNav() {
             >
                 <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
                     <Avatar sx={{ bgcolor: 'primary.main', fontWeight: 700 }}>
-                        {user?.username?.slice(0, 2).toUpperCase() ?? "U"}
+                        {initials}
                     </Avatar>
                     <div>
                         <Typography variant="subtitle1">{user?.fullName || user?.username}</Typography>
                         <Typography color="text.secondary" variant="caption">
-                            @{user?.username} · {user?.role}
+                            {user?.role}
                         </Typography>
                     </div>
                 </Stack>
@@ -91,12 +92,12 @@ export function SideNav() {
                             <Stack component="ul" spacing={1} sx={{ listStyle: "none", m: 0, p: 0 }}>
                                 {group.items.map((item) => (
                                     <NavItem {...item} key={item.key} pathname={pathname} />
-                                ))} 
+                                ))}
                             </Stack>
                         </Stack>
                     ))}
                 </Stack>
-            </Stack> 
+            </Stack>
         </div>
     );
 }

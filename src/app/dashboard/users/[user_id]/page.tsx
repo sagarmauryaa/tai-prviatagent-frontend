@@ -3,6 +3,7 @@ import { appConfig } from "@/config/app";
 import UserDetail from "@/components/dashboard/users/UserDetail";
 import { getUser } from "@/utils/backend-endpoints";
 import { log } from "node:console";
+import { cookies } from "next/headers";
 
 export const metadata = { title: `User Details | Dashboard | ${appConfig.name}` };
 
@@ -14,10 +15,10 @@ const UserDetailPage = async ({ params }: Props) => {
   const { user_id } = await params;
   let user = null;
 
-  try {
-    const response = await getUser(user_id);
-    console.log('response::', response);
+  const token = (await cookies()).get("access_token")?.value;
 
+  try {
+    const response = await getUser(user_id, token);
     user = response.data?.data?.data ?? response.data?.data ?? null;
   } catch (error) {
     console.error("Error fetching user details:", error);

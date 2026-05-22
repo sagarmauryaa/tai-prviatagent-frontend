@@ -32,10 +32,10 @@ export const createUser = (data: { username: string, pass: string, role: string,
     return axiosInstance.post(`users`, data);
 };
 
-export const getUser = async (userId: string) => {
-    const response = await axiosInstance.get(`users/${userId}`);
-    console.log('response', response.data);
-
+export const getUser = async (userId: string, token?: string) => {
+    const response = await axiosInstance.get(`users/${userId}`, token ? {
+        headers: { "Authorization": `Bearer ${token}` }
+    } : undefined);
     return response;
 };
 

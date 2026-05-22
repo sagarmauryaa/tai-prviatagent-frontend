@@ -246,6 +246,7 @@ export default function UserDetail({ user }: UserDetailProps) {
         }
     };
 
+
     return (
         <Stack spacing={3}>
 
