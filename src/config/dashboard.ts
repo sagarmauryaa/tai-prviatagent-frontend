@@ -34,12 +34,12 @@ const dashboardConfig = {
 			key: "data",
 			title: "Data (DeepIndex Technology)",
 			items: [
-				, {
-					key: "add-data",
-					title: "Add Data",
+				{
+					key: "files",
+					title: "Files",
 					icon: "file",
-					href: paths.dashboard.addData
-				}, 
+					href: paths.dashboard.files
+				},
 				{
 					key: "database",
 					title: "SQL Databases",
@@ -57,7 +57,7 @@ const dashboardConfig = {
 					title: "Projects",
 					icon: "folder",
 					href: paths.dashboard.projects
-				}, 
+				},
 				{
 					key: "users",
 					title: "Users",

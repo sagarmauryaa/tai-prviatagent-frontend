@@ -9,6 +9,8 @@ export const paths = {
 		overview: "/dashboard",
 		privAgentMd: '/dashboard/priv-agent-md',
 		database: '/dashboard/database',
+		files: '/dashboard/files',
+		fileDetail: (id: string, projectId?: string) => `/dashboard/files/${id}${projectId ? `?projectId=${projectId}` : ''}`,
 		projects: '/dashboard/projects',
 		projectDetail: (id: string) => `/dashboard/projects/${id}`,
 		users: '/dashboard/users',

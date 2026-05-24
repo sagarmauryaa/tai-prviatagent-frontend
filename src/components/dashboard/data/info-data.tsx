@@ -1,15 +1,15 @@
 "use client"
 import * as React from "react";
-import InfoDataTable from "@/components/dashboard/add-data/info-data-table";
+import InfoDataTable from "@/components/dashboard/data/info-data-table";
 import { Card } from "@mui/material";
-import TextForm from "@/components/dashboard/add-data/text-form";
-import FileUploadForm from "@/components/dashboard/add-data/file-upload-form";
-import PDFUrlForm from "@/components/dashboard/add-data/pdfUrl-form";
-import CSVFileUploadForm from "@/components/dashboard/add-data/csv-file-form";
-import WebPageForm from "@/components/dashboard/add-data/webpage-form";
-import { InfoDataEditModal } from "@/components/dashboard/add-data/info-data-edit-modal";
-import { TextMetaDataModal } from "@/components/dashboard/add-data/text-metadata-modal";
-import { FileMetaDataModal } from "@/components/dashboard/add-data/file-metadata-modal";
+import TextForm from "@/components/dashboard/data/text-form";
+import FileUploadForm from "@/components/dashboard/data/file-upload-form";
+import PDFUrlForm from "@/components/dashboard/data/pdfUrl-form";
+import CSVFileUploadForm from "@/components/dashboard/data/csv-file-form";
+import WebPageForm from "@/components/dashboard/data/webpage-form";
+import { InfoDataEditModal } from "@/components/dashboard/data/info-data-edit-modal";
+import { TextMetaDataModal } from "@/components/dashboard/data/text-metadata-modal";
+import { FileMetaDataModal } from "@/components/dashboard/data/file-metadata-modal";
 import { useAuth } from "@/components/auth/auth-context";
 import { useRouter } from "next/navigation";
 import { getInfoData } from "@/utils/backend-endpoints";

@@ -16,6 +16,7 @@ interface SelectProjectFieldProps {
     disabled?: boolean;
     label?: string;
     placeholder?: string;
+    multiple?: boolean;
 }
 
 const SelectProjectField = ({
@@ -24,6 +25,7 @@ const SelectProjectField = ({
     disabled = false,
     label = "Projects",
     placeholder = "Select projects…",
+    multiple = true,
 }: SelectProjectFieldProps) => {
     const [options, setOptions] = useState<ProjectOption[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -57,6 +59,29 @@ const SelectProjectField = ({
         () => options.filter((option) => value.includes(option.value)),
         [options, value]
     );
+
+    if (!multiple) {
+        const selectedOption = selectedOptions[0] ?? null;
+        return (
+            <Autocomplete
+                options={options}
+                value={selectedOption}
+                loading={isLoading}
+                disabled={disabled}
+                getOptionLabel={(option) => option.label}
+                isOptionEqualToValue={(option, selected) => option.value === selected.value}
+                onChange={(_, selected) => onChange(selected ? [selected.value] : [])}
+                renderInput={(params) => (
+                    <TextField
+                        {...params}
+                        label={label}
+                        size="small"
+                        placeholder={!selectedOption ? placeholder : ""}
+                    />
+                )}
+            />
+        );
+    }
 
     return (
         <Autocomplete
