@@ -2,12 +2,10 @@
 
 import * as React from "react";
 import {
-    Autocomplete,
     Avatar,
     Box,
     Button,
     Checkbox,
-    Chip,
     CircularProgress,
     Dialog,
     DialogActions,
@@ -43,14 +41,7 @@ import { Article as ArticleIcon } from "@phosphor-icons/react/dist/ssr/Article";
 import { ChatCircle as ChatIcon } from "@phosphor-icons/react/dist/ssr/ChatCircle";
 import { toast } from "sonner";
 import { updateUser } from "@/utils/backend-endpoints";
-
-const MOCK_PROJECTS = [
-    "Magento Data",
-    "EE_ProductCatalog_PDFs",
-    "EE_PDF_Catalog",
-    "Support Knowledge Base",
-    "Marketing Assets",
-];
+import SelectProjectField from "@/components/dashboard/users/SelectProjectField";
 
 const AI_MODELS = [
     "gpt-5.2",
@@ -92,6 +83,41 @@ interface FeatureFlagState {
     canManageSQLDatabases: boolean;
     canViewFilesPage: boolean;
     canConfigureChatAgent: boolean;
+}
+
+interface UserFormState {
+    fullName: string;
+    username: string;
+    role: 'ADMIN' | 'USER';
+    projects: string[];
+}
+
+function normalizeProjectIds(projects: unknown): string[] {
+    if (!Array.isArray(projects)) return [];
+
+    return projects
+        .map((project) => {
+            if (typeof project === 'string') return project;
+            if (project && typeof project === 'object' && '_id' in project) {
+                return String((project as { _id: string })._id);
+            }
+            return null;
+        })
+        .filter((id): id is string => Boolean(id));
+}
+
+function getUserRole(user: User): 'ADMIN' | 'USER' {
+    const role = (user.role || (user.isAdmin ? 'ADMIN' : 'USER')).toString().toUpperCase();
+    return role === 'ADMIN' ? 'ADMIN' : 'USER';
+}
+
+function buildUserFormState(user: User): UserFormState {
+    return {
+        fullName: user.fullName || '',
+        username: user.username || '',
+        role: getUserRole(user),
+        projects: normalizeProjectIds(user.projects),
+    };
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -191,8 +217,17 @@ export default function UserDetail({ user }: UserDetailProps) {
         updatedAt: new Date().toISOString(),
     };
 
-    const [isAdmin, setIsAdmin] = React.useState(userData.isAdmin);
-    const [assignedProjects, setAssignedProjects] = React.useState<string[]>(userData.projects);
+    const [formData, setFormData] = React.useState<UserFormState>(buildUserFormState(userData));
+
+    React.useEffect(() => {
+        if (!user) return;
+        setFormData(buildUserFormState(user));
+    }, [user]);
+
+    const handleChange = (field: keyof UserFormState) => (value: unknown) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+    };
+
     const [featureFlags, setFeatureFlags] = React.useState<FeatureFlagState>({
         canSelectAIModel: false,
         canEditPrivAgentMd: false,
@@ -211,11 +246,6 @@ export default function UserDetail({ user }: UserDetailProps) {
     const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
 
     const [isSaving, setIsSaving] = React.useState(false);
-    const [formData, setFormData] = React.useState({
-        fullName: userData.fullName || '',
-        username: userData.username || '',
-        role: (userData.role || (userData.isAdmin ? 'ADMIN' : 'USER')).toString().toUpperCase(),
-    });
 
     const handleFlagChange = (key: keyof FeatureFlagState) => (e: React.ChangeEvent<HTMLInputElement>) => {
         setFeatureFlags((prev) => ({ ...prev, [key]: e.target.checked }));
@@ -231,13 +261,21 @@ export default function UserDetail({ user }: UserDetailProps) {
 
         setIsSaving(true);
         try {
-            const payload: any = {};
-            if (formData.fullName && formData.fullName.trim()) payload.fullName = formData.fullName.trim();
-            if (formData.username && formData.username.trim()) payload.username = formData.username.trim().toLowerCase();
-            if (formData.role && formData.role.trim()) payload.role = formData.role.trim();
+            const payload = {
+                fullName: formData.fullName.trim() || undefined,
+                username: formData.username.trim().toLowerCase(),
+                role: formData.role,
+                ...(formData.role === 'USER' ? { projects: formData.projects } : {}),
+            };
 
-            await updateUser(userData._id, payload);
-            toast.success('User updated successfully');
+            const response = await updateUser(userData._id, payload);
+            if (response.data.success) {
+                toast.success('User updated successfully');
+            } else if (response.data.errors?.length > 0) {
+                toast.error(response.data.errors[0].msg);
+            } else {
+                toast.error(response.data.error || 'Failed to update user');
+            }
         } catch (err) {
             console.error(err);
             toast.error('Failed to update user');
@@ -326,7 +364,7 @@ export default function UserDetail({ user }: UserDetailProps) {
 
                     {/* Stat Pills Row */}
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ mt: 2.5 }}>
-                        <StatPill icon={<FolderIcon size={16} weight="duotone" />} label="Projects" value={`${userData.projects.length} assigned`} />
+                        <StatPill icon={<FolderIcon size={16} weight="duotone" />} label="Projects" value={formData.role === 'ADMIN' ? 'Full access' : `${formData.projects.length} assigned`} />
                         <StatPill icon={<CalendarIcon size={16} weight="duotone" />} label="Created" value={formattedDate} />
                     </Stack>
                 </Card>
@@ -363,57 +401,25 @@ export default function UserDetail({ user }: UserDetailProps) {
                                 <Checkbox
                                     size="small"
                                     checked={formData.role === 'ADMIN'}
-                                    onChange={(e) => setFormData((p) => ({ ...p, role: e.target.checked ? 'ADMIN' : 'USER' }))}
+                                    disabled={isSaving}
+                                    onChange={(e) => {
+                                        const role = e.target.checked ? 'ADMIN' : 'USER';
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            role,
+                                            projects: role === 'ADMIN' ? [] : prev.projects,
+                                        }));
+                                    }}
                                 />
                             </Stack>
 
-                            {/* Assigned Projects */}
-                            <Box>
-                                <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    sx={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", fontSize: "0.68rem", display: "block", mb: 1 }}
-                                >
-                                    Assigned Projects
-                                </Typography>
-                                <Autocomplete
-                                    multiple
-                                    options={MOCK_PROJECTS}
-                                    value={assignedProjects}
-                                    onChange={(_, value) => setAssignedProjects(value)}
-                                    renderTags={(value, getTagProps) =>
-                                        value.map((option, index) => {
-                                            const { key, ...tagProps } = getTagProps({ index });
-                                            return (
-                                                <Chip
-                                                    key={key}
-                                                    label={option}
-                                                    size="small"
-                                                    {...tagProps}
-                                                    sx={{
-                                                        bgcolor: "primary.main",
-                                                        color: "primary.contrastText",
-                                                        fontWeight: 600,
-                                                        fontSize: "0.72rem",
-                                                        "& .MuiChip-deleteIcon": {
-                                                            color: "primary.contrastText",
-                                                            opacity: 0.7,
-                                                            "&:hover": { opacity: 1 },
-                                                        },
-                                                    }}
-                                                />
-                                            );
-                                        })
-                                    }
-                                    renderInput={(params) => (
-                                        <TextField
-                                            {...params}
-                                            size="small"
-                                            placeholder={assignedProjects.length === 0 ? "Select projects…" : ""}
-                                        />
-                                    )}
+                            {formData.role !== 'ADMIN' && (
+                                <SelectProjectField
+                                    value={formData.projects}
+                                    onChange={(projects) => handleChange('projects')(projects)}
+                                    disabled={isSaving}
                                 />
-                            </Box>
+                            )}
                         </Stack>
                     </Card>
 

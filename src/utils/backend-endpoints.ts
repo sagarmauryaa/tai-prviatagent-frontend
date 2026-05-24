@@ -48,6 +48,9 @@ export const deleteUser = (userId: string) => {
 };
 
 // PROJECT CRUD 
+export const getProjectsOptions = () => {
+    return axiosInstance.get(`projects/options`);
+};
 export const getProjects = (page: number = 1, limit: number = 10, search: string = '') => {
     return axiosInstance.get(`projects?page=${page}&limit=${limit}&search=${search}`);
 };

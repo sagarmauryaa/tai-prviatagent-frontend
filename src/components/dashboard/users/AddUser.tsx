@@ -23,12 +23,14 @@ import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { createUser } from '@/utils/backend-endpoints';
+import SelectProjectField from '@/components/dashboard/users/SelectProjectField';
 
 interface FormState {
     fullName: string;
     username: string;
     password: string;
     role: 'ADMIN' | 'USER';
+    projects: string[];
 }
 
 const DEFAULT_FORM: FormState = {
@@ -36,6 +38,7 @@ const DEFAULT_FORM: FormState = {
     username: '',
     password: '',
     role: 'USER',
+    projects: [],
 };
 
 const AddUser = () => {
@@ -56,7 +59,6 @@ const AddUser = () => {
         setForm((prev) => ({ ...prev, [field]: value }));
     };
 
-    // Stub — wire to real API when ready
     const handleCreateUser = async () => {
         if (!form.username.trim()) {
             toast.error('Username is required');
@@ -74,12 +76,20 @@ const AddUser = () => {
                 pass: form.password,
                 role: form.role,
                 fullName: form.fullName || undefined,
+                ...(form.role === 'USER' ? { projects: form.projects } : {}),
             };
 
-            await createUser(payload);
-
-            toast.success(`User "${form.username}" created successfully`);
-            handleClose();
+            const response = await createUser(payload);
+            if (response.data.success) {
+                toast.success(`User "${form.username}" created successfully`);
+                handleClose();
+            } else {
+                if (response.data.errors.length > 0) {
+                    toast.error(response.data.errors[0].msg);
+                } else {
+                    toast.error(response.data.error);
+                }
+            }
         } catch (error) {
             console.error(error);
             toast.error('Failed to create user. Please try again.');
@@ -194,10 +204,25 @@ const AddUser = () => {
                             <Checkbox
                                 size="small"
                                 checked={form.role === 'ADMIN'}
-                                onChange={(e) => handleChange('role')(e.target.checked ? 'ADMIN' : 'USER')}
+                                onChange={(e) => {
+                                    const role = e.target.checked ? 'ADMIN' : 'USER';
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        role,
+                                        projects: role === 'ADMIN' ? [] : prev.projects,
+                                    }));
+                                }}
                                 disabled={isPending}
                             />
                         </Stack>
+
+                        {form.role !== 'ADMIN' && (
+                            <SelectProjectField
+                                value={form.projects}
+                                onChange={(projects) => handleChange('projects')(projects)}
+                                disabled={isPending}
+                            />
+                        )}
                     </Stack>
                 </DialogContent>
 
